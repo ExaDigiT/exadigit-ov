@@ -1,0 +1,13 @@
+Package: kit-sdk-public
+Version: release.106.5+c6f6b56
+Maintainers: null
+Description: null
+SWIPAT NvBug: null
+Repository: https://gitlab-master.nvidia.com/omniverse/kit-apps/kit-sdk-public.git
+License Type: NVIDIA
+Branch: release_106.5
+Commit: 3c3e137027d8cccc8edcc8c76c53f3aa2d6e3d1d
+Time: Tue Dec 17 06:22:43 2024
+Builder Name: DESKTOP-S6BT285
+Packman Version: 7.24.3
+Packagemaker Version: 1.71.1
