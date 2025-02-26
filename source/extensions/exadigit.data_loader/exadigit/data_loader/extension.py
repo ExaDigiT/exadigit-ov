@@ -26,22 +26,40 @@ class DataLoader(omni.ext.IExt):
 
         self._test_data = {
             # Make all of node 1's GPUs red
-            "n1a1": {"power": -1.0},
-            "n1a2": {"power": -1.0},
-            "n1a3": {"power": -1.0},
-            "n1a4": {"power": -1.0},
+            "x1n1a1": {"power": -1.0},
+            "x1n1a2": {"power": -1.0},
+            "x1n1a3": {"power": -1.0},
+            "x1n1a4": {"power": -1.0},
 
             # Make two of node 2's GPUs red
-            "n2a1": {"power": -1.0},
-            "n2a2": {"power": 1.0},
-            "n2a3": {"power": 1.0},
-            "n2a4": {"power": -1.0},
+            "x1n2a1": {"power": -1.0},
+            "x1n2a2": {"power": 1.0},
+            "x1n2a3": {"power": 1.0},
+            "x1n2a4": {"power": -1.0},
 
             # Make one of node 3's GPUs red
-            "n3a1": {"power": -1.0},
-            "n3a2": {"power": 1.0},
-            "n3a3": {"power": 1.0},
-            "n3a4": {"power": 1.0},
+            "x1n3a1": {"power": -1.0},
+            "x1n3a2": {"power": 1.0},
+            "x1n3a3": {"power": 1.0},
+            "x1n3a4": {"power": 1.0},
+
+            # Make all of node 1's GPUs red
+            "x2n1a1": {"power": -1.0},
+            "x2n1a2": {"power": -1.0},
+            "x2n1a3": {"power": -1.0},
+            "x2n1a4": {"power": -1.0},
+
+            # Make two of node 2's GPUs red
+            "x2n2a1": {"power": -1.0},
+            "x2n2a2": {"power": 1.0},
+            "x2n2a3": {"power": 1.0},
+            "x2n2a4": {"power": -1.0},
+
+            # Make one of node 3's GPUs red
+            "x2n3a1": {"power": -1.0},
+            "x2n3a2": {"power": 1.0},
+            "x2n3a3": {"power": 1.0},
+            "x2n3a4": {"power": 1.0},
         }
 
         # Dynamically load the JSON from the same directory as the extension
@@ -68,6 +86,8 @@ class DataLoader(omni.ext.IExt):
         if counters is None:
             counters = {}  # Counters for types at the current level.
 
+        print(f"[exadigit.data_loader] Entering _assign_xnames_recursive for prim: {prim.GetPath()}")
+
         attributes_scope = prim.GetChild("attributes")
         if attributes_scope:
             type_attr = attributes_scope.GetAttribute("type")
@@ -78,41 +98,66 @@ class DataLoader(omni.ext.IExt):
                 type_code = type_info["code"]
                 is_container = type_info.get("container", False)
 
+                # Debug prints: show how the prim was classified
+                print(f"[exadigit.data_loader]  Prim path: {prim.GetPath()}")
+                print(f"[exadigit.data_loader]  Found type: {prim_type}")
+                print(f"[exadigit.data_loader]  Resolved code: {type_code}, is_container: {is_container}")
+
                 if is_container:
                     # Increment the counter for this container type at the current level.
-                    counters[type_code] = counters.get(type_code, 0) + 1
+                    old_val = counters.get(type_code, 0)
+                    counters[type_code] = old_val + 1
                     idx = counters[type_code]
+
+                    print(f"[exadigit.data_loader]  Container counters[{type_code}] was {old_val}, now {idx}")
+
+                    # Push (type_code, idx) onto the stack
                     stack.append((type_code, idx))
                     prefix = "".join(f"{code}{num}" for (code, num) in stack)
+
                     xname_attr = attributes_scope.GetAttribute("xname")
                     if not xname_attr:
                         xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
                     xname_attr.Set(prefix)
-                    print(f"[exadigit.data_loader] Assigned xname '{prefix}' to {prim.GetPath()} (container)")
+                    print(f"[exadigit.data_loader]  => Assigned xname '{prefix}' to container {prim.GetPath()}")
 
-                    # Process children with a fresh counter dictionary.
+                    # Process children with a fresh counter dictionary
                     child_counters = {}
                     for child in prim.GetChildren():
                         if child.GetName() != "Phys_Rep":
                             self._assign_xnames_recursive(child, stack, child_counters)
-                    stack.pop()
-                    # IMPORTANT: return immediately so that children are not processed twice.
+
+                    # Pop from the stack when done
+                    popped = stack.pop()
+                    print(f"[exadigit.data_loader]  Popped {popped} from the stack for {prim.GetPath()}")
+                    # Return immediately to avoid re-processing children below
                     return
+
                 else:
-                    # Leaf type: increment its counter in the current level.
-                    counters[type_code] = counters.get(type_code, 0) + 1
+                    # Leaf type
+                    old_val = counters.get(type_code, 0)
+                    counters[type_code] = old_val + 1
                     idx = counters[type_code]
+
+                    print(f"[exadigit.data_loader]  Leaf counters[{type_code}] was {old_val}, now {idx}")
+
+                    # Build prefix from the stack
                     prefix = "".join(f"{code}{num}" for (code, num) in stack)
                     leaf_xname = f"{prefix}{type_code}{idx}"
+
                     xname_attr = attributes_scope.GetAttribute("xname")
                     if not xname_attr:
                         xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
                     xname_attr.Set(leaf_xname)
-                    print(f"[exadigit.data_loader] Assigned xname '{leaf_xname}' to {prim.GetPath()} (leaf)")
-        # Process any children that weren't handled above.
+                    print(f"[exadigit.data_loader]  => Assigned xname '{leaf_xname}' to leaf {prim.GetPath()}")
+
+        # Process any children not handled above (i.e. no 'attributes' or container logic)
         for child in prim.GetChildren():
             if child.GetName() != "Phys_Rep":
                 self._assign_xnames_recursive(child, stack, counters)
+
+        print(f"[exadigit.data_loader] Exiting _assign_xnames_recursive for prim: {prim.GetPath()}")
+
 
     def assign_xnames(self):
         """Assign xnames to components based on the hierarchical mapping provided in xnames_map.json."""
