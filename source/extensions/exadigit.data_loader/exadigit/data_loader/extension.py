@@ -25,6 +25,7 @@ class DataLoader(omni.ext.IExt):
         print("[exadigit.data_loader] Extension startup")
 
         self._test_data = {
+            # CABINET 1
             # Make all of node 1's GPUs red
             "x1n1a1": {"power": -1.0},
             "x1n1a2": {"power": -1.0},
@@ -43,23 +44,24 @@ class DataLoader(omni.ext.IExt):
             "x1n3a3": {"power": 1.0},
             "x1n3a4": {"power": 1.0},
 
-            # Make all of node 1's GPUs red
+            # CABINET 2
+            # Make three of node 1's GPUs red
             "x2n1a1": {"power": -1.0},
             "x2n1a2": {"power": -1.0},
             "x2n1a3": {"power": -1.0},
-            "x2n1a4": {"power": -1.0},
+            "x2n1a4": {"power": 1.0},
 
-            # Make two of node 2's GPUs red
+            # Make the top two of node 2's GPUs red
             "x2n2a1": {"power": -1.0},
-            "x2n2a2": {"power": 1.0},
+            "x2n2a2": {"power": -1.0},
             "x2n2a3": {"power": 1.0},
-            "x2n2a4": {"power": -1.0},
+            "x2n2a4": {"power": 1.0},
 
             # Make one of node 3's GPUs red
-            "x2n3a1": {"power": -1.0},
+            "x2n3a1": {"power": 1.0},
             "x2n3a2": {"power": 1.0},
             "x2n3a3": {"power": 1.0},
-            "x2n3a4": {"power": 1.0},
+            "x2n3a4": {"power": -1.0},
         }
 
         # Dynamically load the JSON from the same directory as the extension
