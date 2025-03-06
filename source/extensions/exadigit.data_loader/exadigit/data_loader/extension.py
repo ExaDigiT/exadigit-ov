@@ -62,7 +62,8 @@ class DataLoader(omni.ext.IExt):
                     if not xname_attr:
                         xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
                     xname_attr.Set(prefix)
-                    print(f"[exadigit.data_loader] Assigned xname '{prefix}' to container {prim.GetPath()}")
+                    # Print statement to verify correct xname assignment
+                    #print(f"[exadigit.data_loader] Assigned xname '{prefix}' to container {prim.GetPath()}")
 
                     self.lookup_dict[prefix] = prim
 
@@ -86,7 +87,8 @@ class DataLoader(omni.ext.IExt):
                     if not xname_attr:
                         xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
                     xname_attr.Set(leaf_xname)
-                    print(f"[exadigit.data_loader] Assigned xname '{leaf_xname}' to leaf {prim.GetPath()}")
+                    # Print statement to verify correct xname assignment
+                    # print(f"[exadigit.data_loader] Assigned xname '{leaf_xname}' to leaf {prim.GetPath()}")
 
                     self.lookup_dict[leaf_xname] = prim
 
@@ -110,58 +112,12 @@ class DataLoader(omni.ext.IExt):
 
     def propagate_data(self):
         print("[exadigit.data_loader] Starting data propagation...")
-        # STRESS TEST
-        test_data = {
-                        # ROW 1
-                        "x1n1": {"power": -1.0, "temperature": 75.0, "status": "active"},
-                        "x1n2": {"power": -1.0},
-                        "x1n3": {"power": -1.0},
-                        "x1n4": {"power": -1.0},
-                        "x2n3a1": {"power": -1.0},
-                        "x2n3a2": {"power": -1.0},
-                        "x2n3a3": {"power": -1.0},
-                        "x2n3a4": {"power": -1.0},
-                        "x5": {"power": -1.0},
-                        "x7n1": {"power": -1.0},
-                        "x7n3": {"power": -1.0},
-                        "x10": {"power": -1.0},
-                        "x14n2": {"power": -1.0},
-                        "x14n4": {"power": -1.0},
-                        "x16n1": {"power": -1.0},
-                        "x16n2": {"power": -1.0},
-                        "x16n3": {"power": -1.0},
-                        "x16n4": {"power": -1.0},
+        # Data for stress-test.usd
+        test_data = self.generate_test_data(52, 21, 1, 4, 8)
 
-                        # ROW 2
-                        "x18": {"power": -1.0},
-                        "x19": {"power": -1.0},
-                        "x20": {"power": -1.0},
-                        "x21": {"power": -1.0},
-                        "x25n1": {"power": -1.0},
-                        "x25n2": {"power": -1.0},
-                        "x25n3": {"power": -1.0},
-                        "x25n4": {"power": -1.0},
-                        "x30n1": {"power": -1.0},
-                        "x30n4": {"power": -1.0},
+        # Data for test.usd
+        #test_data = self.generate_test_data(2, 21, 1, 4, 8)
 
-                        # ROW 3
-                        "x38n1": {"power": -1.0},
-                        "x38n2": {"power": -1.0},
-                        "x38n3": {"power": -1.0},
-                        "x38n4": {"power": -1.0},
-                        "x40n1": {"power": -1.0},
-                        "x40n2": {"power": -1.0},
-                        "x40n3": {"power": -1.0},
-                        "x40n4": {"power": -1.0},
-                        "x45": {"power": -1.0},
-                        "x46": {"power": -1.0},
-                        "x49n2a1": {"power": -1.0},
-                        "x49n2a3": {"power": -1.0},
-                        "x52n3a1": {"power": -1.0},
-                        "x52n3a2": {"power": -1.0},
-                        "x52n3a3": {"power": -1.0},
-                        "x52n3a4": {"power": -1.0}
-                    }
         for xname, values in test_data.items():
             prim = self.lookup_dict.get(xname)
             if prim:
@@ -188,11 +144,13 @@ class DataLoader(omni.ext.IExt):
             if not attr:
                 attr = attributes_scope.CreateAttribute(key, attr_type)
             attr.Set(value)
-            print(f"[exadigit.data_loader] Updated '{key}' for {prim.GetPath()} with value {value}")
+            # Print statement to help verify propagation
+            #print(f"[exadigit.data_loader] Updated '{key}' for {prim.GetPath()} with value {value}")
 
+        ### Commenting material change out for now, it's a bottleneck ###
         # Apply material if power is negative
-        if "power" in values and values["power"] < 0:
-            self._apply_material(prim, "/World/Looks/RedMat")
+        # if "power" in values and values["power"] < 0:
+        #     self._apply_material(prim, "/World/Looks/RedMat")
 
     def _apply_material(self, prim, material_path):
         stage = prim.GetStage()
@@ -205,6 +163,39 @@ class DataLoader(omni.ext.IExt):
             binding_api = UsdShade.MaterialBindingAPI(prim)
             binding_api.Bind(material, UsdShade.Tokens.strongerThanDescendants)
             print(f"[exadigit.data_loader] Material '{material_path}' applied to {prim.GetPath()}")
+
+    def generate_test_data(self, num_cabinets=2, num_nodes=21, num_processors=1, num_accelerators=4, num_disks=8):
+        """
+        Generates test data corresponding to every single component within the data center for stress testing.
+        Includes cabinets, nodes, processors, accelerators, and disks.
+        """
+        test_data = {}
+        values = {"power": -1.0, "temperature": 50, "status": "active"}
+
+        for cab in range(1, num_cabinets + 1):
+            cabinet_key = f"x{cab}"
+            test_data[cabinet_key] = values.copy()
+
+            for node in range(1, num_nodes + 1):
+                node_key = f"x{cab}n{node}"
+                test_data[node_key] = values.copy()
+
+                # Processors
+                for proc in range(1, num_processors + 1):
+                    processor_key = f"{node_key}p{proc}"
+                    test_data[processor_key] = values.copy()
+
+                # Accelerators
+                for acc in range(1, num_accelerators + 1):
+                    accelerator_key = f"{node_key}a{acc}"
+                    test_data[accelerator_key] = values.copy()
+
+                # Disks
+                for disk in range(1, num_disks + 1):
+                    disk_key = f"{node_key}d{disk}"
+                    test_data[disk_key] = values.copy()
+
+        return test_data
 
     def on_shutdown(self):
         print("[exadigit.data_loader] Extension shutdown")
