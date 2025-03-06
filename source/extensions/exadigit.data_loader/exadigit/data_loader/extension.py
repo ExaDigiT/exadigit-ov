@@ -10,72 +10,39 @@
 
 import omni.ext
 import omni.ui as ui
-from pxr import Usd, UsdGeom, Sdf, UsdShade
+from pxr import Usd, Sdf, UsdShade
 import omni.usd
 import os
 import json
 
 
 class DataLoader(omni.ext.IExt):
-    """This extension dynamically propagates multiple attributes, assigns xnames based on hierarchy,
-       and updates materials based on conditions with optimized traversal."""
-
     def on_startup(self, _ext_id):
-        """Called every time the extension is activated."""
         print("[exadigit.data_loader] Extension startup")
 
-        self._test_data = {
-            # CABINET 1
-            # Make all of node 1's GPUs red
-            "x1n1a1": {"power": -1.0},
-            "x1n1a2": {"power": -1.0},
-            "x1n1a3": {"power": -1.0},
-            "x1n1a4": {"power": -1.0},
-
-            # Make two of node 2's GPUs red
-            "x1n2a1": {"power": -1.0},
-            "x1n2a2": {"power": 1.0},
-            "x1n2a3": {"power": 1.0},
-            "x1n2a4": {"power": -1.0},
-
-            # Make one of node 3's GPUs red
-            "x1n3a1": {"power": -1.0},
-            "x1n3a2": {"power": 1.0},
-            "x1n3a3": {"power": 1.0},
-            "x1n3a4": {"power": 1.0},
-
-            # CABINET 2
-            # Make three of node 1's GPUs red
-            "x2n1a1": {"power": -1.0},
-            "x2n1a2": {"power": -1.0},
-            "x2n1a3": {"power": -1.0},
-            "x2n1a4": {"power": 1.0},
-
-            # Make the top two of node 2's GPUs red
-            "x2n2a1": {"power": -1.0},
-            "x2n2a2": {"power": -1.0},
-            "x2n2a3": {"power": 1.0},
-            "x2n2a4": {"power": 1.0},
-
-            # Make one of node 3's GPUs red
-            "x2n3a1": {"power": 1.0},
-            "x2n3a2": {"power": 1.0},
-            "x2n3a3": {"power": 1.0},
-            "x2n3a4": {"power": -1.0},
-        }
-
-        # Dynamically load the JSON from the same directory as the extension
+        # Load xnames mapping
         current_dir = os.path.dirname(os.path.abspath(__file__))
         with open(os.path.join(current_dir, "xnames_map.json"), "r") as f:
             self.xnames_map = json.load(f)
 
+        self.lookup_dict = {}  # Stores xname-to-prim mappings
+
         self._window = ui.Window("Data Loader", width=300, height=300)
         with self._window.frame:
             with ui.VStack():
+                ui.Label("Click 'Refresh Scene' to rebuild xnames and lookup.")
+                ui.Button("Refresh Scene", clicked_fn=self.refresh_scene)
                 ui.Label("Click 'Propagate Data' to update attributes and materials.")
                 ui.Button("Propagate Data", clicked_fn=self.propagate_data)
-                ui.Label("Click 'Assign Xnames' to assign xnames based on hierarchy.")
-                ui.Button("Assign Xnames", clicked_fn=self.assign_xnames)
+
+    def _get_type(self, prim):
+        """Retrieve the 'type' attribute from the prim's attributes scope."""
+        attributes_scope = prim.GetChild("attributes")
+        if attributes_scope:
+            type_attr = attributes_scope.GetAttribute("type")
+            if type_attr and type_attr.HasAuthoredValue():
+                return type_attr.Get()
+        return None
 
     def _assign_xnames_recursive(self, prim, stack=None, counters=None):
         """
@@ -88,8 +55,6 @@ class DataLoader(omni.ext.IExt):
         if counters is None:
             counters = {}  # Counters for types at the current level.
 
-        print(f"[exadigit.data_loader] Entering _assign_xnames_recursive for prim: {prim.GetPath()}")
-
         attributes_scope = prim.GetChild("attributes")
         if attributes_scope:
             type_attr = attributes_scope.GetAttribute("type")
@@ -100,18 +65,11 @@ class DataLoader(omni.ext.IExt):
                 type_code = type_info["code"]
                 is_container = type_info.get("container", False)
 
-                # Debug prints: show how the prim was classified
-                print(f"[exadigit.data_loader]  Prim path: {prim.GetPath()}")
-                print(f"[exadigit.data_loader]  Found type: {prim_type}")
-                print(f"[exadigit.data_loader]  Resolved code: {type_code}, is_container: {is_container}")
-
                 if is_container:
                     # Increment the counter for this container type at the current level.
                     old_val = counters.get(type_code, 0)
                     counters[type_code] = old_val + 1
                     idx = counters[type_code]
-
-                    print(f"[exadigit.data_loader]  Container counters[{type_code}] was {old_val}, now {idx}")
 
                     # Push (type_code, idx) onto the stack
                     stack.append((type_code, idx))
@@ -121,27 +79,26 @@ class DataLoader(omni.ext.IExt):
                     if not xname_attr:
                         xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
                     xname_attr.Set(prefix)
-                    print(f"[exadigit.data_loader]  => Assigned xname '{prefix}' to container {prim.GetPath()}")
+                    print(f"[exadigit.data_loader] Assigned xname '{prefix}' to container {prim.GetPath()}")
 
-                    # Process children with a fresh counter dictionary
+                    # Store in lookup dictionary
+                    self.lookup_dict[prefix] = prim
+
+                    # Process children with a **fresh counter dictionary** (ensures nodes within each container are correctly numbered)
                     child_counters = {}
                     for child in prim.GetChildren():
                         if child.GetName() != "Phys_Rep":
                             self._assign_xnames_recursive(child, stack, child_counters)
 
-                    # Pop from the stack when done
-                    popped = stack.pop()
-                    print(f"[exadigit.data_loader]  Popped {popped} from the stack for {prim.GetPath()}")
-                    # Return immediately to avoid re-processing children below
-                    return
+                    # Pop from the stack when done (restores correct hierarchy state)
+                    stack.pop()
+                    return  # Return early so children are not re-processed below
 
                 else:
                     # Leaf type
                     old_val = counters.get(type_code, 0)
                     counters[type_code] = old_val + 1
                     idx = counters[type_code]
-
-                    print(f"[exadigit.data_loader]  Leaf counters[{type_code}] was {old_val}, now {idx}")
 
                     # Build prefix from the stack
                     prefix = "".join(f"{code}{num}" for (code, num) in stack)
@@ -151,18 +108,20 @@ class DataLoader(omni.ext.IExt):
                     if not xname_attr:
                         xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
                     xname_attr.Set(leaf_xname)
-                    print(f"[exadigit.data_loader]  => Assigned xname '{leaf_xname}' to leaf {prim.GetPath()}")
+                    print(f"[exadigit.data_loader] Assigned xname '{leaf_xname}' to leaf {prim.GetPath()}")
 
-        # Process any children not handled above (i.e. no 'attributes' or container logic)
+                    # Store in lookup dictionary
+                    self.lookup_dict[leaf_xname] = prim
+
+        # Process any children not handled above (i.e., no 'attributes' or container logic)
         for child in prim.GetChildren():
             if child.GetName() != "Phys_Rep":
                 self._assign_xnames_recursive(child, stack, counters)
 
-        print(f"[exadigit.data_loader] Exiting _assign_xnames_recursive for prim: {prim.GetPath()}")
-
-
-    def assign_xnames(self):
-        """Assign xnames to components based on the hierarchical mapping provided in xnames_map.json."""
+    def refresh_scene(self):
+        """Rebuild xname assignments and lookup dictionary."""
+        print("[exadigit.data_loader] Rebuilding xname assignments and lookup dictionary...")
+        self.lookup_dict.clear()
         stage = omni.usd.get_context().get_stage()
         if not stage:
             print("[exadigit.data_loader] No stage loaded.")
@@ -171,14 +130,83 @@ class DataLoader(omni.ext.IExt):
         if not root_prim:
             print("[exadigit.data_loader] No default prim found.")
             return
+        self._assign_xnames_recursive(root_prim)
+        print("[exadigit.data_loader] Xname assignment and lookup rebuild completed.")
 
-        print("[exadigit.data_loader] Starting xname assignment...")
-        # Start with an empty stack and counter dictionary.
-        self._assign_xnames_recursive(root_prim, stack=[], counters={})
-        print("[exadigit.data_loader] Xname assignment completed.")
+    def propagate_data(self):
+        """Propagate data efficiently using lookup dictionary."""
+        print("[exadigit.data_loader] Starting data propagation...")
+        # STRESS TEST
+        test_data = {
+                        # ROW 1
+                        "x1n1": {"power": -1.0},
+                        "x1n2": {"power": -1.0},
+                        "x1n3": {"power": -1.0},
+                        "x1n4": {"power": -1.0},
+                        "x2n3a1": {"power": -1.0},
+                        "x2n3a2": {"power": -1.0},
+                        "x2n3a3": {"power": -1.0},
+                        "x2n3a4": {"power": -1.0},
+                        "x5": {"power": -1.0},
+                        "x7n1": {"power": -1.0},
+                        "x7n3": {"power": -1.0},
+                        "x10": {"power": -1.0},
+                        "x14n2": {"power": -1.0},
+                        "x14n4": {"power": -1.0},
+                        "x16n1": {"power": -1.0},
+                        "x16n2": {"power": -1.0},
+                        "x16n3": {"power": -1.0},
+                        "x16n4": {"power": -1.0},
+
+                        # ROW 2
+                        "x18": {"power": -1.0},
+                        "x19": {"power": -1.0},
+                        "x20": {"power": -1.0},
+                        "x21": {"power": -1.0},
+                        "x25n1": {"power": -1.0},
+                        "x25n2": {"power": -1.0},
+                        "x25n3": {"power": -1.0},
+                        "x25n4": {"power": -1.0},
+                        "x30n1": {"power": -1.0},
+                        "x30n4": {"power": -1.0},
+
+                        # ROW 3
+                        "x38n1": {"power": -1.0},
+                        "x38n2": {"power": -1.0},
+                        "x38n3": {"power": -1.0},
+                        "x38n4": {"power": -1.0},
+                        "x40n1": {"power": -1.0},
+                        "x40n2": {"power": -1.0},
+                        "x40n3": {"power": -1.0},
+                        "x40n4": {"power": -1.0},
+                        "x45": {"power": -1.0},
+                        "x46": {"power": -1.0},
+                        "x49n2a1": {"power": -1.0},
+                        "x49n2a3": {"power": -1.0},
+                        "x52n3a1": {"power": -1.0},
+                        "x52n3a2": {"power": -1.0},
+                        "x52n3a3": {"power": -1.0},
+                        "x52n3a4": {"power": -1.0}
+                    }
+        for xname, values in test_data.items():
+            prim = self.lookup_dict.get(xname)
+            if prim:
+                attributes_scope = prim.GetChild("attributes")
+                if attributes_scope:
+                    for key, value in values.items():
+                        attr = attributes_scope.GetAttribute(key)
+                        if not attr:
+                            attr = attributes_scope.CreateAttribute(key, Sdf.ValueTypeNames.Double)
+                        attr.Set(value)
+                        print(f"[exadigit.data_loader] Updated '{key}' for {xname} with value {value}")
+
+                # Apply material logic (example)
+                material_path = "/World/Looks/RedMat"
+                self._apply_material(prim, material_path, stronger=True)
+        print("[exadigit.data_loader] Data propagation completed.")
 
     def _apply_material(self, prim, material_path, stronger=True):
-        """Apply material to a prim with configurable binding strength."""
+        """Apply material to a prim."""
         stage = prim.GetStage()
         material_prim = stage.GetPrimAtPath(material_path)
         if not material_prim:
@@ -191,89 +219,5 @@ class DataLoader(omni.ext.IExt):
             binding_api.Bind(material, strength)
             print(f"[exadigit.data_loader] Material '{material_path}' applied to {prim.GetPath()} with {'stronger' if stronger else 'weaker'} binding.")
 
-    def _determine_value_type(self, value):
-        """Determine the USD value type based on Python type."""
-        if isinstance(value, int):
-            return Sdf.ValueTypeNames.Int
-        elif isinstance(value, float):
-            return Sdf.ValueTypeNames.Double
-        elif isinstance(value, str):
-            return Sdf.ValueTypeNames.String
-        else:
-            print(f"[exadigit.data_loader] Unsupported value type for value: {value}")
-            return None
-
-    def _update_attributes(self, prim, target_xname, attributes_dict):
-        """Update multiple attributes dynamically and adjust material based on power condition."""
-        attributes_scope = prim.GetChild("attributes")
-        if attributes_scope:
-            xname_attr = attributes_scope.GetAttribute("xname")
-            if xname_attr and xname_attr.HasAuthoredValue():
-                xname = xname_attr.Get()
-                print(f"Found xname: {xname} on {prim.GetPath()}")
-                if xname == target_xname:
-                    print(f"Updating attributes for {xname}")
-                    for attr_name, attr_value in attributes_dict.items():
-                        value_type = self._determine_value_type(attr_value)
-                        if value_type:
-                            existing_attr = attributes_scope.GetAttribute(attr_name)
-                            if existing_attr:
-                                print(f"Updating existing attribute '{attr_name}' to {attr_value}")
-                                existing_attr.Set(attr_value)
-                            else:
-                                print(f"Creating attribute '{attr_name}' with value {attr_value}")
-                                new_attr = attributes_scope.CreateAttribute(attr_name, value_type)
-                                new_attr.Set(attr_value)
-
-                    # Apply material conditionally with weaker binding if power is positive.
-                    if "power" in attributes_dict:
-                        power_value = attributes_dict["power"]
-                        if power_value < 0:
-                            self._apply_material(prim, "/World/Looks/RedMat", stronger=True)
-                        else:
-                            self._apply_material(prim, "/World/Looks/RedMat", stronger=False)
-                    return True
-        return False
-
-    def _recursive_traverse(self, prim, data, matched_keys):
-        """Recursively traverse the prim hierarchy while skipping 'Phys_Rep' payloads."""
-        if len(matched_keys) == len(data):
-            print("[exadigit.data_loader] All matches found. Stopping traversal.")
-            return
-
-        print(f"Traversing prim: {prim.GetPath()}")
-        attributes_scope = prim.GetChild("attributes")
-        if attributes_scope:
-            for xname_key, attributes_dict in data.items():
-                if xname_key not in matched_keys:
-                    if self._update_attributes(prim, xname_key, attributes_dict):
-                        matched_keys.add(xname_key)
-
-        for child in prim.GetChildren():
-            if child.GetName() == "Phys_Rep":
-                print(f"Skipping 'Phys_Rep' payload at {child.GetPath()}")
-                continue
-            self._recursive_traverse(child, data, matched_keys)
-
-    def propagate_data(self):
-        """Triggered by the UI button to propagate data and adjust materials accordingly."""
-        stage = omni.usd.get_context().get_stage()
-        if not stage:
-            print("[exadigit.data_loader] No stage loaded.")
-            return
-        print(f"[exadigit.data_loader] Stage loaded: {stage}")
-
-        root_prim = stage.GetDefaultPrim()
-        if not root_prim:
-            print("[exadigit.data_loader] No default prim found.")
-            return
-        print(f"[exadigit.data_loader] Default prim: {root_prim.GetPath()}")
-
-        print("[exadigit.data_loader] Starting data propagation with dynamic material adjustments...")
-        matched_keys = set()
-        self._recursive_traverse(root_prim, self._test_data, matched_keys)
-        print("[exadigit.data_loader] Data propagation and material adjustments completed.")
-
     def on_shutdown(self):
-        """Called every time the extension is deactivated to clean up state."""
         print("[exadigit.data_loader] Extension shutdown")
