@@ -5,7 +5,7 @@ Clone this repo
 ```bash
 git clone https://code.ornl.gov/exadigit/exadigit-ov.git
 ```
-Build then launch exadigit.dc_digital_twin_base.kit
+Build then launch exadigit.dc_digital_twin_base.kit in developer mode
 ```bash
 cd exadigit-ov
 repo build
@@ -13,6 +13,13 @@ repo launch -d
 ```
 
 ## Usage
-1. From the app open the file test.usd in the test-files directory
-2. Using the window for the data loader extension press the "Assign Xnames" button
-3. Press the "Propagate Data" button to visualize data
+1. From the app, open the file `test.usd` or `stress-test.usd` in the `test-files` directory.
+
+   *_(Note: `stress-test.usd` may take a while to load.)_*
+2. Using the Data Loader extension window, press the **"Refresh Scene"** button to dynamically assign `xnames` and
+   create a lookup map for your data center scene.
+3. Also in the Data Loader extension window, press the **"Propagate Data"** button to send some test data to each data center
+   component in the scene. You can then click on a prim in-scene, and an editor utility widget will pop up detailing its attributes.
+
+   *_(Depending on whether you're using `test.usd` or `stress-test.usd`, you can comment or uncomment lines 116/119 in
+   `exadigit-ov\source\extensions\exadigit.data_loader\exadigit\data_loader\extension.py` to generate the appropriate test data.)_*
