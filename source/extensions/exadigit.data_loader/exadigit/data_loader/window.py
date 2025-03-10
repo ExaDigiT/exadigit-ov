@@ -11,6 +11,8 @@ class DataLoaderWindow(ui.Window):
         self._tabs = [
             ("Scene Management", self._build_scene_mgmt_tab),
             ("RAPS", self._build_raps_tab),
+            ("Run Simulation", self._build_run_simulation_tab),
+            ("Simulation List", self._build_simulation_list_tab)
         ]
         self._active_tab = "Scene Management"
 
@@ -67,11 +69,6 @@ class DataLoaderWindow(ui.Window):
     def _build_raps_tab(self):
         """Second tab: 'RAPS' with buttons for Simulation API actions."""
         with ui.VStack(spacing=5):
-            #ui.Label("RAPS Panel", height=20, style={"font_size": 16})
-
-            with ui.HStack(spacing=10):
-                ui.Button("Run Simulation", width=140, clicked_fn=self._extension.run_simulation)
-                ui.Button("Simulation List", width=140, clicked_fn=self._extension.get_simulation_list)
             with ui.HStack(spacing=10):
                 ui.Button("Simulation Details", width=140, clicked_fn=lambda: self._extension.get_simulation_details("123"))
                 ui.Button("Cooling CDU Data", width=140, clicked_fn=lambda: self._extension.get_simulation_cooling_cdu("123"))
@@ -79,3 +76,110 @@ class DataLoaderWindow(ui.Window):
             with ui.HStack(spacing=10):
                 ui.Button("Scheduler Jobs", width=140, clicked_fn=lambda: self._extension.get_simulation_scheduler_jobs("123"))
                 ui.Button("System Info", width=140, clicked_fn=lambda: self._extension.get_system_info("datacenter-1"))
+
+    def _build_run_simulation_tab(self):
+        """Creates the 'Run Simulation' panel with user-configurable fields."""
+
+        self.simulation_params = {
+            "start": "2025-03-10T12:00:00Z",  # Default values, user can change them
+            "end": "2025-03-10T14:00:00Z",
+            "system": "frontier",
+            "scheduler": {
+                "enabled": True,
+                "jobs_mode": "random",
+                "seed": 12345,
+                "num_jobs": 10
+            },
+            "cooling": {
+                "enabled": False
+            }
+        }
+
+        def update_param(param_path, value):
+            """Helper function to update simulation parameters dynamically."""
+            keys = param_path.split(".")
+            param_ref = self.simulation_params
+            for key in keys[:-1]:
+                param_ref = param_ref[key]
+            param_ref[keys[-1]] = value
+
+        with ui.ScrollingFrame(height=400):
+            with ui.VStack(spacing=5):
+                # Start Time Input
+                ui.Label("Start Time (ISO 8601)")
+                self.start_input = ui.StringField()
+                self.start_input.model.set_value(self.simulation_params["start"])
+                self.start_input.model.add_value_changed_fn(lambda m: update_param("start", m.get_value_as_string()))
+
+                # End Time Input
+                ui.Label("End Time (ISO 8601)")
+                self.end_input = ui.StringField()
+                self.end_input.model.set_value(self.simulation_params["end"])
+                self.end_input.model.add_value_changed_fn(lambda m: update_param("end", m.get_value_as_string()))
+
+                # System Selection Dropdown
+                ui.Label("Select System")
+                self.system_dropdown = ui.ComboBox(0, "frontier", "fugaku", "lassen", "marconi100")
+                self.system_dropdown.model.add_item_changed_fn(lambda m, idx: update_param("system", self.system_dropdown.model.get_item_value_model(idx).as_string()))
+
+                # Jobs Mode Selection Dropdown
+                ui.Label("Jobs Mode")
+                self.jobs_mode_dropdown = ui.ComboBox(0, "replay", "custom", "random", "test")
+                self.jobs_mode_dropdown.model.add_item_changed_fn(lambda m, idx: update_param("scheduler.jobs_mode", self.jobs_mode_dropdown.model.get_item_value_model(idx).as_string()))
+
+                # Random Seed (for random jobs mode)
+                ui.Label("Random Seed")
+                self.seed_input = ui.IntField()
+                self.seed_input.model.set_value(self.simulation_params["scheduler"]["seed"])
+                self.seed_input.model.add_value_changed_fn(lambda m: update_param("scheduler.seed", m.get_value_as_int()))
+
+                # Number of Jobs (for random jobs mode)
+                ui.Label("Number of Jobs")
+                self.num_jobs_input = ui.IntField()
+                self.num_jobs_input.model.set_value(self.simulation_params["scheduler"]["num_jobs"])
+                self.num_jobs_input.model.add_value_changed_fn(lambda m: update_param("scheduler.num_jobs", m.get_value_as_int()))
+
+                # Cooling Enabled Toggle
+                ui.Label("Enable Cooling")
+                self.cooling_toggle = ui.CheckBox()
+                self.cooling_toggle.model.set_value(self.simulation_params["cooling"]["enabled"])
+                self.cooling_toggle.model.add_value_changed_fn(lambda m: update_param("cooling.enabled", m.get_value_as_bool()))
+
+                # Run Simulation Button
+                ui.Button("Run", width=140, clicked_fn=lambda: self._extension.run_simulation(self.simulation_params))
+
+    def _build_simulation_list_tab(self):
+        """Creates the 'Simulation List' panel with selectable simulations."""
+
+        with ui.VStack(spacing=5):
+            # Column headers
+            with ui.HStack(spacing=10):
+                ui.Label("Simulation ID", width=150)
+                ui.Label("System", width=100)
+                ui.Label("Start", width=150)
+                ui.Spacer(width=10)  # Space for "Select" button
+
+            # Scrollable list of simulations
+            with ui.ScrollingFrame(height=300):
+                with ui.VStack(spacing=5):
+                    for sim in self._extension.sim_list:
+                        with ui.HStack(spacing=10):
+                            ui.Label(sim.id[:15] + "...", width=150)  # Shorten ID
+                            ui.Label(sim.system, width=100)
+                            ui.Label(sim.start, width=150)
+
+                            # Select button
+                            def select_simulation(sim=sim):
+                                self._extension.selected_sim = sim
+                                print("Selected Sim: " + str(self._extension.selected_sim))
+                                self.frame.rebuild()  # Rebuild to reflect selection
+
+                            # Highlight if selected
+                            is_selected = self._extension.selected_sim and self._extension.selected_sim.id == sim.id
+                            btn_label = "Selected" if is_selected else "Select"
+                            btn_style = {"color": 0xFF00FF00} if is_selected else {}
+
+                            ui.Button(btn_label, width=80, clicked_fn=select_simulation, style=btn_style)
+
+            # Back Button
+            #ui.Button("Back", width=140, clicked_fn=lambda: self._set_active_tab("Scene Management"))

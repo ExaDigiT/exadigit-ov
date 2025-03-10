@@ -41,9 +41,15 @@ class SimulationServerClient:
             return None
 
     def post_simulation_run(self, simulation_params):
-        """Initiates a new simulation."""
-        #return self.make_request("/simulation/run", method="POST", payload=simulation_params)
-        return "/simulation/run"
+        """Runs a simulation by sending a POST request to the Simulation Server API."""
+        response = self.make_request("/simulation/run", method="POST", payload=simulation_params)
+
+        if response is None:
+            print("[simulation_server_client] No response received. The request might be malformed.")
+        else:
+            print(f"[simulation_server_client] Response: {response}")
+
+        return response
 
     def get_simulation_list(self, fields=None, limit=None, offset=None):
         """Fetches the list of available simulations with correct field formatting."""
