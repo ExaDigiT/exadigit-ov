@@ -12,6 +12,11 @@ repo build
 repo launch -d
 ```
 
+## Simulation Server Setup
+1. Follow instructions to install ExaDigiT Simulation Server here: https://code.ornl.gov/exadigit/simulationserver
+2. Run the server locally, it will be hosted on http:localhost:8080
+
+
 ## Usage
 1. From the app, open the file `test.usd` or `stress-test.usd` in the `test-files` directory.
 
