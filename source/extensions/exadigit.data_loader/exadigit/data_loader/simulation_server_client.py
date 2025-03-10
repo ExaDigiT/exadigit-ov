@@ -40,13 +40,40 @@ class SimulationServerClient:
             print(f"[simulation_server_client] Error making request to {url}: {e}")
             return None
 
-    def run_simulation(self, simulation_params):
-        """
-        Initiates a simulation by sending a POST request to the SimulationServer API.
+    def post_simulation_run(self, simulation_params):
+        """Initiates a new simulation."""
+        #return self.make_request("/simulation/run", method="POST", payload=simulation_params)
+        return "/simulation/run"
 
-        :param simulation_params: Dictionary containing the parameters required to run the simulation.
-        :return: Response from the server indicating the status of the simulation initiation.
-        """
-        endpoint = "/api/simulations/run"  # Update this to the correct endpoint as specified in the API docs
-        response = self.make_request(endpoint, method="POST", payload=simulation_params)
-        return response
+    def get_simulation_list(self):
+        """Fetches the list of available simulations."""
+        #return self.make_request("/simulation/list")
+        return "/simulation/list"
+
+    def get_simulation(self, simulation_id):
+        """Fetches details of a specific simulation."""
+        return self.make_request(f"/simulation/{simulation_id}")
+
+    def get_simulation_cooling_cdu(self, simulation_id):
+        """Retrieves cooling CDU data for a given simulation."""
+        return self.make_request(f"/simulation/{simulation_id}/cooling/cdu")
+
+    def get_simulation_cooling_cep(self, simulation_id):
+        """Retrieves cooling CEP data for a given simulation."""
+        return self.make_request(f"/simulation/{simulation_id}/cooling/cep")
+
+    def get_simulation_scheduler_jobs(self, simulation_id):
+        """Retrieves job scheduler data for a simulation."""
+        return self.make_request(f"/simulation/{simulation_id}/scheduler/jobs")
+
+    def get_simulation_scheduler_job_power_history(self, simulation_id, job_id):
+        """Fetches power history for a specific job within a simulation."""
+        return self.make_request(f"/simulation/{simulation_id}/scheduler/jobs/{job_id}/power-history")
+
+    def get_simulation_scheduler_system(self, simulation_id):
+        """Retrieves system scheduler data for a simulation."""
+        return self.make_request(f"/simulation/{simulation_id}/scheduler/system")
+
+    def get_system_info(self, system_name):
+        """Fetches system information."""
+        return self.make_request(f"/system-info/{system_name}")

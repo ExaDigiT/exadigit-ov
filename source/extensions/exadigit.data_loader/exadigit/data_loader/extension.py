@@ -41,11 +41,46 @@ class DataLoaderExtension(omni.ext.IExt):
         test_data = self.generate_test_data()  # Generates test data
         self.data_propagator.propagate_data(test_data)
 
-    def run_simulation_api_call(self):
+    ### WRAPPERS FOR SIMULATION SERVER CALLS ###
+    def run_simulation(self):
         """Runs a simulation using the Simulation Server API."""
         print("[exadigit.data_loader] Running simulation API call...")
-        response = self.sim_client.run_simulation()
+        simulation_params = {
+            "parameter1": "value1",
+            "parameter2": "value2"
+        }  # Adjust this based on the expected API request format.
+        response = self.sim_client.post_simulation_run(simulation_params)
         print(f"Simulation Response: {response}")
+
+    def get_simulation_list(self):
+        """Fetches a list of available simulations from the API."""
+        print("[exadigit.data_loader] Running get simulation list API call...")
+        response = self.sim_client.get_simulation_list()
+        print(f"Simulation List: {response}")
+
+    def get_simulation_details(self, simulation_id):
+        """Fetch details of a specific simulation."""
+        print(f"[exadigit.data_loader] Fetching details for simulation ID: {simulation_id}")
+        response = self.sim_client.get_simulation(simulation_id)
+        print(f"Simulation Details: {response}")
+
+    def get_simulation_cooling_cdu(self, simulation_id):
+        """Fetch cooling CDU data for a simulation."""
+        print(f"[exadigit.data_loader] Fetching cooling CDU data for simulation ID: {simulation_id}")
+        response = self.sim_client.get_simulation_cooling_cdu(simulation_id)
+        print(f"Cooling CDU Data: {response}")
+
+    def get_simulation_scheduler_jobs(self, simulation_id):
+        """Fetch scheduler jobs for a simulation."""
+        print(f"[exadigit.data_loader] Fetching scheduler jobs for simulation ID: {simulation_id}")
+        response = self.sim_client.get_simulation_scheduler_jobs(simulation_id)
+        print(f"Scheduler Jobs: {response}")
+
+    def get_system_info(self, system_name):
+        """Fetch system info from the API."""
+        print(f"[exadigit.data_loader] Fetching system info for: {system_name}")
+        response = self.sim_client.get_system_info(system_name)
+        print(f"System Info: {response}")
 
     def generate_test_data(self):
         """Generates structured test data."""

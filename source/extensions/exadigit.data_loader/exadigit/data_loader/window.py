@@ -65,9 +65,18 @@ class DataLoaderWindow(ui.Window):
                           clicked_fn=self._extension.propagate_data)
 
     def _build_raps_tab(self):
-        """Second tab: 'RAPS' with a 'Run Simulation' button."""
+        """Second tab: 'RAPS' with buttons for Simulation API actions."""
         with ui.VStack(spacing=5):
-            ui.Label("RAPS Panel", height=20, style={"font_size": 16})
+            #ui.Label("RAPS Panel", height=20, style={"font_size": 16})
+
             with ui.HStack(spacing=10):
-                ui.Button("Run Simulation", width=140,
-                          clicked_fn=self._extension.run_simulation_api_call)
+                ui.Button("Run Simulation", width=140, clicked_fn=self._extension.run_simulation)
+                ui.Button("Simulation List", width=140, clicked_fn=self._extension.simulation_list)
+
+            with ui.HStack(spacing=10):
+                ui.Button("Simulation Details", width=140, clicked_fn=lambda: self._extension.get_simulation_details("123"))
+                ui.Button("Cooling CDU Data", width=140, clicked_fn=lambda: self._extension.get_simulation_cooling_cdu("123"))
+
+            with ui.HStack(spacing=10):
+                ui.Button("Scheduler Jobs", width=140, clicked_fn=lambda: self._extension.get_simulation_scheduler_jobs("123"))
+                ui.Button("System Info", width=140, clicked_fn=lambda: self._extension.get_system_info("datacenter-1"))
