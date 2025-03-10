@@ -45,10 +45,25 @@ class SimulationServerClient:
         #return self.make_request("/simulation/run", method="POST", payload=simulation_params)
         return "/simulation/run"
 
-    def get_simulation_list(self):
-        """Fetches the list of available simulations."""
-        #return self.make_request("/simulation/list")
-        return "/simulation/list"
+    def get_simulation_list(self, fields=None, limit=None, offset=None):
+        """Fetches the list of available simulations with correct field formatting."""
+        query_params = []
+
+        if fields:
+            # Format fields correctly if needed
+            for field in fields:
+                query_params.append(f"fields={field}")
+
+        if limit is not None:
+            query_params.append(f"limit={limit}")
+        if offset is not None:
+            query_params.append(f"offset={offset}")
+
+        query_string = "?" + "&".join(query_params) if query_params else ""
+
+        print(f"[simulation_server_client] Making request to: {self.base_url}/simulation/list{query_string}")
+        return self.make_request(f"/simulation/list{query_string}", method="GET")
+
 
     def get_simulation(self, simulation_id):
         """Fetches details of a specific simulation."""

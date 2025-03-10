@@ -57,7 +57,7 @@ class DataLoaderWindow(ui.Window):
     def _build_scene_mgmt_tab(self):
         """First tab: 'Scene Management' with Refresh and Propagate buttons."""
         with ui.VStack(spacing=5):
-            ui.Label("Scene Management", height=20, style={"font_size": 16})
+            # ui.Label("Scene Management", height=20, style={"font_size": 16})
             with ui.HStack(spacing=10):
                 ui.Button("Refresh Scene", width=140,
                           clicked_fn=self._extension.refresh_scene)
@@ -71,8 +71,7 @@ class DataLoaderWindow(ui.Window):
 
             with ui.HStack(spacing=10):
                 ui.Button("Run Simulation", width=140, clicked_fn=self._extension.run_simulation)
-                ui.Button("Simulation List", width=140, clicked_fn=self._extension.simulation_list)
-
+                ui.Button("Simulation List", width=140, clicked_fn=self._extension.get_simulation_list)
             with ui.HStack(spacing=10):
                 ui.Button("Simulation Details", width=140, clicked_fn=lambda: self._extension.get_simulation_details("123"))
                 ui.Button("Cooling CDU Data", width=140, clicked_fn=lambda: self._extension.get_simulation_cooling_cdu("123"))

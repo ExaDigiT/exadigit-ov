@@ -53,10 +53,17 @@ class DataLoaderExtension(omni.ext.IExt):
         print(f"Simulation Response: {response}")
 
     def get_simulation_list(self):
-        """Fetches a list of available simulations from the API."""
+        """Fetches a list of available simulations and prints it."""
         print("[exadigit.data_loader] Running get simulation list API call...")
-        response = self.sim_client.get_simulation_list()
-        print(f"Simulation List: {response}")
+
+        # Fetch simulation list with optional parameters
+        # response = self.sim_client.get_simulation_list(fields=["id", "start", "end"], limit=10)
+        response = self.sim_client.get_simulation_list(limit=10)
+
+        if response:
+            print(f"Simulation List: {response}")
+        else:
+            print("[exadigit.data_loader] Failed to fetch simulation list")
 
     def get_simulation_details(self, simulation_id):
         """Fetch details of a specific simulation."""
