@@ -152,34 +152,33 @@ class DataLoaderWindow(ui.Window):
         """Creates the 'Simulation List' panel with selectable simulations."""
 
         with ui.VStack(spacing=5):
-            # Column headers
-            with ui.HStack(spacing=10):
-                ui.Label("Simulation ID", width=150)
-                ui.Label("System", width=100)
-                ui.Label("Start", width=150)
-                ui.Spacer(width=10)  # Space for "Select" button
+            if not self._extension.sim_list:
+                ui.Label("Please start simulationserver container.", height=30, style={"color": "red"})
+            else:
+                # Column headers
+                with ui.HStack(spacing=10):
+                    ui.Label("Simulation ID", width=150)
+                    ui.Label("System", width=100)
+                    ui.Label("Start", width=150)
+                    ui.Spacer(width=10)  # Space for "Select" button
+                # Scrollable list of simulations
+                with ui.ScrollingFrame(height=300):
+                    with ui.VStack(spacing=5):
+                        for sim in self._extension.sim_list:
+                            with ui.HStack(spacing=10):
+                                ui.Label(sim.id[:15] + "...", width=150)  # Shorten ID
+                                ui.Label(sim.system, width=100)
+                                ui.Label(sim.start, width=150)
 
-            # Scrollable list of simulations
-            with ui.ScrollingFrame(height=300):
-                with ui.VStack(spacing=5):
-                    for sim in self._extension.sim_list:
-                        with ui.HStack(spacing=10):
-                            ui.Label(sim.id[:15] + "...", width=150)  # Shorten ID
-                            ui.Label(sim.system, width=100)
-                            ui.Label(sim.start, width=150)
+                                # Select button
+                                def select_simulation(sim=sim):
+                                    self._extension.selected_sim = sim
+                                    print("Selected Sim: " + str(self._extension.selected_sim))
+                                    self.frame.rebuild()  # Rebuild to reflect selection
 
-                            # Select button
-                            def select_simulation(sim=sim):
-                                self._extension.selected_sim = sim
-                                print("Selected Sim: " + str(self._extension.selected_sim))
-                                self.frame.rebuild()  # Rebuild to reflect selection
+                                # Highlight if selected
+                                is_selected = self._extension.selected_sim and self._extension.selected_sim.id == sim.id
+                                btn_label = "Selected" if is_selected else "Select"
+                                btn_style = {"color": 0xFF00FF00} if is_selected else {}
 
-                            # Highlight if selected
-                            is_selected = self._extension.selected_sim and self._extension.selected_sim.id == sim.id
-                            btn_label = "Selected" if is_selected else "Select"
-                            btn_style = {"color": 0xFF00FF00} if is_selected else {}
-
-                            ui.Button(btn_label, width=80, clicked_fn=select_simulation, style=btn_style)
-
-            # Back Button
-            #ui.Button("Back", width=140, clicked_fn=lambda: self._set_active_tab("Scene Management"))
+                                ui.Button(btn_label, width=80, clicked_fn=select_simulation, style=btn_style)

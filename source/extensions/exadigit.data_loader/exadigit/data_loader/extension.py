@@ -36,7 +36,7 @@ class DataLoaderExtension(omni.ext.IExt):
         self.get_simulation_list()
 
         # Create UI Window
-        self._window = DataLoaderWindow("ExaDigit", self, width=400, height=400)
+        self._window = DataLoaderWindow("ExaDigiT", self, width=400, height=400)
 
     def refresh_scene(self):
         """Refresh the scene and rebuild xname mapping."""
