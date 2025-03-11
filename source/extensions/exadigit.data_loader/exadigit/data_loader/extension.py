@@ -15,6 +15,7 @@ from .name_mapper import NameMapper
 from .data_propagator import DataPropagator
 from .simulation_server_client import SimulationServerClient
 from .simulation import Simulation
+from .marconi100 import Marconi100DataLoader
 import omni.usd
 import os
 import json
@@ -31,6 +32,7 @@ class DataLoaderExtension(omni.ext.IExt):
         # Initialize variables
         self.sim_list = None
         self.selected_sim = None
+        self.system_loader = None
 
         print("[exadigit.data_loader] Fetching initial simulation list on startup...")
         self.get_simulation_list()
@@ -44,41 +46,85 @@ class DataLoaderExtension(omni.ext.IExt):
         self.name_mapper.refresh_scene()
 
     def propagate_data(self):
-        """Propagate test data."""
-        print("[exadigit.data_loader] Propagating data...")
-        test_data = self.generate_test_data()  # Generates test data
-        self.data_propagator.propagate_data(test_data)
+        """Fetches and maps cooling data dynamically based on selected simulation's system."""
+        if not self.selected_sim:
+            print("[exadigit.data_loader] No simulation selected! Cannot propagate data.")
+            return
+
+        # Load the correct data loader based on system
+        if self.selected_sim.system == "marconi100":
+            self.system_loader = Marconi100DataLoader(self.name_mapper)
+        else:
+            print(f"[exadigit.data_loader] No data loader implemented for {self.selected_sim.system}")
+            return
+
+        print(f"[exadigit.data_loader] Fetching cooling CDU data for {self.selected_sim.id} ({self.selected_sim.system})...")
+        cdu_response = self.sim_client.get_simulation_cooling_cdu(self.selected_sim.id)
+        cdu_data = self.system_loader.parse_cdu_response(cdu_response) if cdu_response else {}
+
+        cep_data = {}
+        if self.selected_sim.cooling_enabled:
+            print(f"[exadigit.data_loader] Cooling enabled. Fetching cooling CEP data for {self.selected_sim.id}...")
+            cep_response = self.sim_client.get_simulation_cooling_cep(self.selected_sim.id)
+            cep_data = self.system_loader.parse_cep_response(cep_response) if cep_response else {}
+
+        final_data = {**cdu_data, **cep_data}
+
+        if final_data:
+            print(f"[exadigit.data_loader] Final structured data for propagation: {final_data}")
+            self.data_propagator.propagate_data(final_data)
+        else:
+            print("[exadigit.data_loader] No valid cooling data available to propagate.")
 
     ### WRAPPERS FOR SIMULATION SERVER CALLS ###
     def run_simulation(self, simulation_params):
-        """
-        Runs a user-defined simulation by calling the Simulation Server API.
-        """
-        print("[exadigit.data_loader] Running simulation with user-defined parameters...")
+        """Runs a user-defined simulation by calling the Simulation Server API."""
+        print(f"[DEBUG] Running simulation with parameters: {simulation_params}")  # Debugging line
+
         response = self.sim_client.post_simulation_run(simulation_params)
 
-        if not response:
-            print("[exadigit.data_loader] Failed to run simulation")
+        if response:
+            print(f"[DEBUG] Simulation Successfully Created: {response}")
 
+            # Check if cooling exists in response
+            if "config" in response and "cooling" in response["config"]:
+                print(f"[DEBUG] Cooling Enabled in Response: {response['config']['cooling']['enabled']}")
+            else:
+                print("[DEBUG] Cooling settings not found in response.")
+
+        else:
+            print("[exadigit.data_loader] Failed to run simulation")
 
     def get_simulation_list(self):
         """Fetches a list of available simulations and stores them as objects."""
         print("[exadigit.data_loader] Running get simulation list API call...")
 
-        # Fetch response from the API
-        response = self.sim_client.get_simulation_list(limit=10)
+        response = self.sim_client.get_simulation_list(fields=["default"], limit=10)
+
+        print(f"[DEBUG] SIM LIST RESPONSE: {response}")  # Print full response for debugging
 
         if response and "results" in response:
             self.sim_list = []  # Clear existing list before populating
+
             for item in response["results"]:
+                print(f"[DEBUG] Simulation Item: {item}")  # Print each item in the response
+
+                # Extract the `config` field
+                config = item.get("config", {})
+                print(f"[DEBUG] Extracted config: {config}")
+
+                cooling_config = config.get("cooling", {})
+                cooling_enabled = cooling_config.get("enabled", False)
+
                 sim = Simulation(
                     sim_id=item.get("id"),
                     system=item.get("system"),
-                    start=item.get("start")
+                    start=item.get("start"),
+                    cooling_enabled=cooling_enabled  # Store correctly extracted value
                 )
                 self.sim_list.append(sim)
 
-            print(f"Stored {len(self.sim_list)} simulations: {self.sim_list}")
+            print(f"[DEBUG] Stored {len(self.sim_list)} simulations: {self.sim_list}")
         else:
             print("[exadigit.data_loader] Failed to fetch simulation list or empty response.")
 

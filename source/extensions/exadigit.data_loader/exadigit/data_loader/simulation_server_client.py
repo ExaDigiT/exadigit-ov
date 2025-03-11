@@ -56,9 +56,8 @@ class SimulationServerClient:
         query_params = []
 
         if fields:
-            # Format fields correctly if needed
-            for field in fields:
-                query_params.append(f"fields={field}")
+            # Convert list of fields into a single comma-separated string
+            query_params.append(f"fields={','.join(fields)}")
 
         if limit is not None:
             query_params.append(f"limit={limit}")
@@ -66,9 +65,18 @@ class SimulationServerClient:
             query_params.append(f"offset={offset}")
 
         query_string = "?" + "&".join(query_params) if query_params else ""
+        url = f"/simulation/list{query_string}"
 
-        print(f"[simulation_server_client] Making request to: {self.base_url}/simulation/list{query_string}")
-        return self.make_request(f"/simulation/list{query_string}", method="GET")
+        print(f"[simulation_server_client] Making request to: {self.base_url}{url}")
+
+        response = self.make_request(url, method="GET")
+
+        if response is None:
+            print("[simulation_server_client] ERROR: No response received (possible malformed request).")
+        else:
+            print(f"[simulation_server_client] Received response: {response}")
+
+        return response
 
 
     def get_simulation(self, simulation_id):

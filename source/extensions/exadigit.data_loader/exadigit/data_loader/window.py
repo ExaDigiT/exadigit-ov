@@ -102,6 +102,7 @@ class DataLoaderWindow(ui.Window):
             for key in keys[:-1]:
                 param_ref = param_ref[key]
             param_ref[keys[-1]] = value
+            print(f"[DEBUG] Updated {param_path} to {value}")  # Debugging line
 
         with ui.ScrollingFrame(height=400):
             with ui.VStack(spacing=5):
@@ -117,10 +118,17 @@ class DataLoaderWindow(ui.Window):
                 self.end_input.model.set_value(self.simulation_params["end"])
                 self.end_input.model.add_value_changed_fn(lambda m: update_param("end", m.get_value_as_string()))
 
+                # Define available systems
+                systems = ["frontier", "fugaku", "lassen", "marconi100"]
+
                 # System Selection Dropdown
                 ui.Label("Select System")
-                self.system_dropdown = ui.ComboBox(0, "frontier", "fugaku", "lassen", "marconi100")
-                self.system_dropdown.model.add_item_changed_fn(lambda m, idx: update_param("system", self.system_dropdown.model.get_item_value_model(idx).as_string()))
+                self.system_dropdown = ui.ComboBox(0, *systems)
+
+                # Correctly track selection changes
+                self.system_dropdown.model.get_item_value_model().add_value_changed_fn(
+                    lambda m: update_param("system", systems[m.as_int] if m.as_int is not None else "frontier")
+                )
 
                 # Jobs Mode Selection Dropdown
                 ui.Label("Jobs Mode")
