@@ -8,194 +8,190 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+import random
+
 import omni.ext
-import omni.ui as ui
-from pxr import Usd, Sdf, UsdShade
 import omni.usd
-import os
-import json
+
+from .data_propagator import DataPropagator
+from .logging_config import logger
+from .marconi100 import Marconi100DataLoader
+from .name_mapper import NameMapper
+from .simulation import Simulation
+from .simulation_server_client import SimulationServerClient
+from .window import DataLoaderWindow
 
 
-class DataLoader(omni.ext.IExt):
-    def on_startup(self, _ext_id):
+class DataLoaderExtension(omni.ext.IExt):
+    def on_startup(self, ext_id):
         print("[exadigit.data_loader] Extension startup")
 
-        # Load xnames mapping
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        with open(os.path.join(current_dir, "xnames_map.json"), "r") as f:
-            self.xnames_map = json.load(f)
+        # Initialize core modules
+        self.name_mapper = NameMapper()
+        self.data_propagator = DataPropagator(self.name_mapper)
+        self.sim_client = SimulationServerClient()
 
-        self.lookup_dict = {}  # Stores xname-to-prim mappings
+        # Initialize variables
+        self.sim_list = None
+        self.selected_sim = None
+        self.system_loader = None
 
-        self._window = ui.Window("Data Loader", width=300, height=300)
-        with self._window.frame:
-            with ui.VStack():
-                ui.Label("Click 'Refresh Scene' to rebuild xnames and lookup.")
-                ui.Button("Refresh Scene", clicked_fn=self.refresh_scene)
-                ui.Label("Click 'Propagate Data' to update attributes and materials.")
-                ui.Button("Propagate Data", clicked_fn=self.propagate_data)
+        print("[exadigit.data_loader] Fetching initial simulation list on startup...")
+        self.get_simulation_list()
 
-    def _assign_xnames_recursive(self, prim, stack=None, counters=None):
-        if stack is None:
-            stack = []
-        if counters is None:
-            counters = {}
+        # Create UI Window
+        self._window = DataLoaderWindow("ExaDigiT", self, width=400, height=400)
 
-        attributes_scope = prim.GetChild("attributes")
-        if attributes_scope:
-            type_attr = attributes_scope.GetAttribute("type")
-            if type_attr and type_attr.HasAuthoredValue():
-                prim_type = type_attr.Get()
-                type_info = self.xnames_map.get(prim_type, {"code": "u", "container": False})
-                type_code = type_info["code"]
-                is_container = type_info.get("container", False)
-
-                if is_container:
-                    old_val = counters.get(type_code, 0)
-                    counters[type_code] = old_val + 1
-                    idx = counters[type_code]
-
-                    stack.append((type_code, idx))
-                    prefix = "".join(f"{code}{num}" for (code, num) in stack)
-
-                    xname_attr = attributes_scope.GetAttribute("xname")
-                    if not xname_attr:
-                        xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
-                    xname_attr.Set(prefix)
-                    # Print statement to verify correct xname assignment
-                    #print(f"[exadigit.data_loader] Assigned xname '{prefix}' to container {prim.GetPath()}")
-
-                    self.lookup_dict[prefix] = prim
-
-                    child_counters = {}
-                    for child in prim.GetChildren():
-                        if child.GetName() != "Phys_Rep":
-                            self._assign_xnames_recursive(child, stack, child_counters)
-
-                    stack.pop()
-                    return
-
-                else:
-                    old_val = counters.get(type_code, 0)
-                    counters[type_code] = old_val + 1
-                    idx = counters[type_code]
-
-                    prefix = "".join(f"{code}{num}" for (code, num) in stack)
-                    leaf_xname = f"{prefix}{type_code}{idx}"
-
-                    xname_attr = attributes_scope.GetAttribute("xname")
-                    if not xname_attr:
-                        xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
-                    xname_attr.Set(leaf_xname)
-                    # Print statement to verify correct xname assignment
-                    # print(f"[exadigit.data_loader] Assigned xname '{leaf_xname}' to leaf {prim.GetPath()}")
-
-                    self.lookup_dict[leaf_xname] = prim
-
-        for child in prim.GetChildren():
-            if child.GetName() != "Phys_Rep":
-                self._assign_xnames_recursive(child, stack, counters)
-
-    def refresh_scene(self):
-        print("[exadigit.data_loader] Rebuilding xname assignments and lookup dictionary...")
-        self.lookup_dict.clear()
-        stage = omni.usd.get_context().get_stage()
-        if not stage:
-            print("[exadigit.data_loader] No stage loaded.")
-            return
-        root_prim = stage.GetDefaultPrim()
-        if not root_prim:
-            print("[exadigit.data_loader] No default prim found.")
-            return
-        self._assign_xnames_recursive(root_prim)
-        print("[exadigit.data_loader] Xname assignment and lookup rebuild completed.")
+    def generate_lookup(self):
+        """Refresh the scene and rebuild xname mapping."""
+        print("[exadigit.data_loader] Refreshing scene...")
+        self.name_mapper.generate_lookup()
 
     def propagate_data(self):
-        print("[exadigit.data_loader] Starting data propagation...")
-        # Data for stress-test.usd
-        test_data = self.generate_test_data(52, 21, 1, 4, 8)
+        """Fetches CDU and CEP data and propagates only if valid."""
+        logger.info("Fetching CDU and CEP data...")
 
-        # Data for test.usd
-        #test_data = self.generate_test_data(2, 21, 1, 4, 8)
+        if self.selected_sim:
+            cdu_response = self.sim_client.get_simulation_cooling_cdu(self.selected_sim.id)
+            cep_response = self.sim_client.get_simulation_cooling_cep(self.selected_sim.id)
 
-        for xname, values in test_data.items():
-            prim = self.lookup_dict.get(xname)
-            if prim:
-                self._update_attributes(prim, values)
-        print("[exadigit.data_loader] Data propagation completed.")
+            # Validate CDU data
+            if not cdu_response or "data" not in cdu_response or not cdu_response["data"]:
+                logger.warning("CDU data is missing or empty. Cannot propagate.")
+                # return  # Stop propagation
 
-    def _update_attributes(self, prim, values):
-        attributes_scope = prim.GetChild("attributes")
-        if not attributes_scope:
-            return
+            # Validate CEP data
+            if not cep_response or "data" not in cep_response or not cep_response["data"]:
+                logger.warning("CEP data is missing or empty. Cannot propagate.")
+                # return  # Stop propagation
 
-        for key, value in values.items():
-            if isinstance(value, float):
-                attr_type = Sdf.ValueTypeNames.Double
-            elif isinstance(value, int):
-                attr_type = Sdf.ValueTypeNames.Int
-            elif isinstance(value, str):
-                attr_type = Sdf.ValueTypeNames.String
+            # Future Work: Parse responses with dataloader based on selected_sim.system, return correctly mapped data
+            # Map the retrieved CDU and CEP data to xnames
+            # mapped_data = self.map_cooling_data(cdu_response, cep_response)
+
+            # Send the mapped data to the data propagator
+            # self.data_propagator.propagate_data(mapped_data)
+
+            # Just use test data for now with generate_test_data
+            logger.info("Generating test data for propagation...")
+            test_data = self.generate_test_data()
+
+            # Send the mapped data to the data propagator
+            logger.info("Propagating mapped test data...")
+            self.data_propagator.propagate_data(test_data)
+
+            logger.info("Data successfully propagated.")
+        else:
+            logger.error("No simulation selected! Please select one from the Simulation List panel.")
+
+    ### WRAPPERS FOR SIMULATION SERVER CALLS ###
+    def run_simulation(self, simulation_params):
+        """Runs a user-defined simulation by calling the Simulation Server API."""
+        print(f"[DEBUG] Running simulation with parameters: {simulation_params}")  # Debugging line
+
+        response = self.sim_client.post_simulation_run(simulation_params)
+
+        if response:
+            print(f"[DEBUG] Simulation Successfully Created: {response}")
+
+            # Check if cooling exists in response
+            if "config" in response and "cooling" in response["config"]:
+                print(f"[DEBUG] Cooling Enabled in Response: {response['config']['cooling']['enabled']}")
             else:
-                print(f"[exadigit.data_loader] Unsupported value type for {key}: {type(value)}")
-                continue
+                print("[DEBUG] Cooling settings not found in response.")
 
-            attr = attributes_scope.GetAttribute(key)
-            if not attr:
-                attr = attributes_scope.CreateAttribute(key, attr_type)
-            attr.Set(value)
-            # Print statement to help verify propagation
-            #print(f"[exadigit.data_loader] Updated '{key}' for {prim.GetPath()} with value {value}")
+        else:
+            print("[exadigit.data_loader] Failed to run simulation")
 
-        ### Commenting material change out for now, it's a bottleneck ###
-        # Apply material if power is negative
-        # if "power" in values and values["power"] < 0:
-        #     self._apply_material(prim, "/World/Looks/RedMat")
+    def get_simulation_list(self):
+        """Fetches a list of available simulations and stores them as objects."""
+        logger.info("[exadigit.data_loader] Running get simulation list API call...")
 
-    def _apply_material(self, prim, material_path):
-        stage = prim.GetStage()
-        material_prim = stage.GetPrimAtPath(material_path)
-        if not material_prim:
-            print(f"[exadigit.data_loader] Material at {material_path} not found.")
-            return
-        material = UsdShade.Material(material_prim)
-        if material:
-            binding_api = UsdShade.MaterialBindingAPI(prim)
-            binding_api.Bind(material, UsdShade.Tokens.strongerThanDescendants)
-            print(f"[exadigit.data_loader] Material '{material_path}' applied to {prim.GetPath()}")
+        response, status_code = self.sim_client.get_simulation_list(fields=["default"], limit=10)
 
-    def generate_test_data(self, num_cabinets=2, num_nodes=21, num_processors=1, num_accelerators=4, num_disks=8):
-        """
-        Generates test data corresponding to every single component within the data center for stress testing.
-        Includes cabinets, nodes, processors, accelerators, and disks.
-        """
+        if status_code == 200 and response and "results" in response:
+            self.sim_list = []  # Clear existing list before populating
+
+            for item in response["results"]:
+                config = item.get("config", {})
+                cooling_enabled = config.get("cooling", {}).get("enabled", False)
+
+                sim = Simulation(
+                    sim_id=item.get("id"),
+                    system=item.get("system"),
+                    start=item.get("start"),
+                    cooling_enabled=cooling_enabled  # Store correctly extracted value
+                )
+                self.sim_list.append(sim)
+
+            logger.info(f"✅ Stored {len(self.sim_list)} simulations.")
+
+    def get_simulation_details(self, simulation_id):
+        """Fetch details of a specific simulation."""
+        print(f"[exadigit.data_loader] Fetching details for simulation ID: {simulation_id}")
+        response = self.sim_client.get_simulation(simulation_id)
+        print(f"Simulation Details: {response}")
+
+    def get_simulation_cooling_cdu(self, simulation_id):
+        """Fetch cooling CDU data for a simulation."""
+        print(f"[exadigit.data_loader] Fetching cooling CDU data for simulation ID: {simulation_id}")
+        response = self.sim_client.get_simulation_cooling_cdu(simulation_id)
+        print(f"Cooling CDU Data: {response}")
+
+    def get_simulation_scheduler_jobs(self, simulation_id):
+        """Fetch scheduler jobs for a simulation."""
+        print(f"[exadigit.data_loader] Fetching scheduler jobs for simulation ID: {simulation_id}")
+        response = self.sim_client.get_simulation_scheduler_jobs(simulation_id)
+        print(f"Scheduler Jobs: {response}")
+
+    def get_system_info(self, system_name):
+        """Fetch system info from the API."""
+        print(f"[exadigit.data_loader] Fetching system info for: {system_name}")
+        response = self.sim_client.get_system_info(system_name)
+        print(f"System Info: {response}")
+
+    def generate_test_data(self):
+        """Generates structured randomized test data."""
         test_data = {}
-        values = {"power": -1.0, "temperature": 50, "status": "active"}
 
-        for cab in range(1, num_cabinets + 1):
-            cabinet_key = f"x{cab}"
-            test_data[cabinet_key] = values.copy()
+        for cab in range(1, 3):  # Example: Two cabinets (x1, x2)
+            test_data[f"x{cab}"] = {
+                "power": round(random.uniform(1, 5), 2),
+                "temperature": round(random.uniform(0, 100), 2),
+                "status": random.choice(["active", "inactive"])
+            }
 
-            for node in range(1, num_nodes + 1):
+            for node in range(1, 22):  # 21 nodes per cabinet
                 node_key = f"x{cab}n{node}"
-                test_data[node_key] = values.copy()
+                test_data[node_key] = {
+                    "power": round(random.uniform(-5, 5), 2),
+                    "temperature": round(random.uniform(0, 100), 2),
+                    "status": random.choice(["active", "inactive"])
+                }
+                test_data[f"{node_key}p1"] = {
+                    "power": round(random.uniform(-5, 5), 2),
+                    "temperature": round(random.uniform(0, 100), 2),
+                    "status": random.choice(["active", "inactive"])
+                }
 
-                # Processors
-                for proc in range(1, num_processors + 1):
-                    processor_key = f"{node_key}p{proc}"
-                    test_data[processor_key] = values.copy()
+                for acc in range(1, 5):  # 4 accelerators per node
+                    test_data[f"{node_key}a{acc}"] = {
+                        "power": round(random.uniform(-5, 5), 2),
+                        "temperature": round(random.uniform(0, 100), 2),
+                        "status": random.choice(["active", "inactive"])
+                    }
 
-                # Accelerators
-                for acc in range(1, num_accelerators + 1):
-                    accelerator_key = f"{node_key}a{acc}"
-                    test_data[accelerator_key] = values.copy()
-
-                # Disks
-                for disk in range(1, num_disks + 1):
-                    disk_key = f"{node_key}d{disk}"
-                    test_data[disk_key] = values.copy()
+                for drive in range(1, 9):  # 8 drives per node
+                    test_data[f"{node_key}d{drive}"] = {
+                        "power": round(random.uniform(-5, 5), 2),
+                        "temperature": round(random.uniform(0, 100), 2),
+                        "status": random.choice(["active", "inactive"])
+                    }
 
         return test_data
 
     def on_shutdown(self):
         print("[exadigit.data_loader] Extension shutdown")
+        if self._window:
+            self._window.destroy()
+            self._window = None
