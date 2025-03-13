@@ -21,10 +21,12 @@ repo launch -d
 1. From the app, open the file `test.usd` or `stress-test.usd` in the `test-files` directory.
 
    *_(Note: `stress-test.usd` may take a while to load.)_*
-2. Using the Data Loader extension window, press the **"Refresh Scene"** button to dynamically assign `xnames` and
-   create a lookup map for your data center scene.
-3. Also in the Data Loader extension window, press the **"Propagate Data"** button to send some test data to each data center
-   component in the scene. You can then click on a prim in-scene, and an editor utility widget will pop up detailing its attributes.
+2. Using the ExaDigiT extension window under the Run Simulation tab, fill in the required fields then press the **"Run"** button to trigger a new simulation via the RAPS simulation server.
+3. Using the ExaDigiT extension window under the Simulation List tab, you'll see previously run simulations with info including
+the Simulation ID, the System it was ran on, and the Start time of the run. Press the **"Select"** button next to the simulation of
+your choice to set the current simulation you'd like to see data for.
+4. Using the ExaDigiT extension window under the Propagation tab, press the **"Generate Lookup Map"** button to dynamically assign `xnames` and create a lookup map for your data center scene.
+5. Also in the ExaDigiT extension window under the Propagation tab, press the **"Propagate Data"** button to send some test data to each data center component in the scene. You can then click on a prim in-scene, and an editor utility widget will pop up detailing its attributes.
 
    *_(Depending on whether you're using `test.usd` or `stress-test.usd`, you can comment or uncomment lines 116/119 in
    `exadigit-ov\source\extensions\exadigit.data_loader\exadigit\data_loader\extension.py` to generate the appropriate test data.)_*
