@@ -1,6 +1,8 @@
-import requests
 import os
-import json
+from urllib.parse import urlencode
+
+import requests
+
 
 class SimulationServerClient:
     def __init__(self, base_url="http://localhost:8080", token=None):
@@ -9,21 +11,15 @@ class SimulationServerClient:
         self.token = token or os.getenv("RAPS_TOKEN")  # Use token from environment variable if not provided
 
     def make_request(self, endpoint, method="GET", payload=None):
-        """
-        Generalized method for making API requests to the simulation server.
-
-        :param endpoint: API endpoint (e.g., "/api/simulation/data")
-        :param method: HTTP method ("GET", "POST", "PUT", etc.)
-        :param payload: JSON payload for POST/PUT requests
-        :return: JSON response or None if an error occurs
-        """
         url = f"{self.base_url}{endpoint}"
-        headers = {
-            "Content-Type": "application/json",
-        }
+        headers = {"Content-Type": "application/json"}
 
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
+
+        print(f"[simulation_server_client] Sending {method} request to: {url}")
+        if payload:
+            print(f"[simulation_server_client] Request payload: {payload}")
 
         try:
             if method == "GET":
@@ -34,75 +30,90 @@ class SimulationServerClient:
                 raise ValueError(f"Unsupported HTTP method: {method}")
 
             response.raise_for_status()
-            return response.json()
+            try:
+                return response.json(), response.status_code
+            except ValueError:
+                print(f"[simulation_server_client] ❌ Invalid JSON response from {url}: {response.text}")
+                return None, response.status_code
+
+        except requests.HTTPError as e:
+            print(f"[simulation_server_client] HTTP Error {response.status_code}: {e}")
+            return None, response.status_code
 
         except requests.RequestException as e:
-            print(f"[simulation_server_client] Error making request to {url}: {e}")
-            return None
+            print(f"[simulation_server_client] ❌ Request Exception while calling {method} {url}")
+            print(f"[simulation_server_client] Exception Details: {e}")
+            return None, None
+
+    def handle_api_response(self, response, status_code, success_message):
+        """Handles API responses consistently across all requests."""
+        if status_code == 200:
+            print(f"[simulation_server_client] ✅ {success_message}: {response}")
+        elif status_code == 422:
+            print("[simulation_server_client] ⚠️ 422 Error: Unprocessable Entity. Possible malformed request.")
+        elif status_code == 404:
+            print("[simulation_server_client] ⚠️ 404 Error: Resource not found.")
+        elif status_code is None:
+            print("[simulation_server_client] ❌ ERROR: No response received (network issue or bad request).")
+        else:
+            print(f"[simulation_server_client] ❗ Unexpected Error {status_code}: {response}")
+
+        return response, status_code
 
     def post_simulation_run(self, simulation_params):
         """Runs a simulation by sending a POST request to the Simulation Server API."""
-        response = self.make_request("/simulation/run", method="POST", payload=simulation_params)
-
-        if response is None:
-            print("[simulation_server_client] No response received. The request might be malformed.")
-        else:
-            print(f"[simulation_server_client] Response: {response}")
-
-        return response
+        response, status_code = self.make_request("/simulation/run", method="POST", payload=simulation_params)
+        return self.handle_api_response(response, status_code, "Simulation started successfully")
 
     def get_simulation_list(self, fields=None, limit=None, offset=None):
         """Fetches the list of available simulations with correct field formatting."""
-        query_params = []
+        query_params = {}
 
         if fields:
-            # Convert list of fields into a single comma-separated string
-            query_params.append(f"fields={','.join(fields)}")
+            query_params["fields"] = ",".join(fields)
 
         if limit is not None:
-            query_params.append(f"limit={limit}")
+            query_params["limit"] = limit
         if offset is not None:
-            query_params.append(f"offset={offset}")
+            query_params["offset"] = offset
 
-        query_string = "?" + "&".join(query_params) if query_params else ""
+        query_string = f"?{urlencode(query_params)}" if query_params else ""
         url = f"/simulation/list{query_string}"
 
-        print(f"[simulation_server_client] Making request to: {self.base_url}{url}")
-
-        response = self.make_request(url, method="GET")
-
-        if response is None:
-            print("[simulation_server_client] ERROR: No response received (possible malformed request).")
-        else:
-            print(f"[simulation_server_client] Received response: {response}")
-
-        return response
-
+        response, status_code = self.make_request(url, method="GET")
+        return self.handle_api_response(response, status_code, "Simulation list retrieved")
 
     def get_simulation(self, simulation_id):
         """Fetches details of a specific simulation."""
-        return self.make_request(f"/simulation/{simulation_id}")
+        response, status_code = self.make_request(f"/simulation/{simulation_id}")
+        return self.handle_api_response(response, status_code, "Simulation details retrieved")
 
     def get_simulation_cooling_cdu(self, simulation_id):
-        """Retrieves cooling CDU data for a given simulation."""
-        return self.make_request(f"/simulation/{simulation_id}/cooling/cdu")
+        """Retrieves cooling CDU data for a given simulation and handles response codes."""
+        response, status_code = self.make_request(f"/simulation/{simulation_id}/cooling/cdu")
+        return self.handle_api_response(response, status_code, "CDU data retrieved")
 
     def get_simulation_cooling_cep(self, simulation_id):
         """Retrieves cooling CEP data for a given simulation."""
-        return self.make_request(f"/simulation/{simulation_id}/cooling/cep")
+        response, status_code = self.make_request(f"/simulation/{simulation_id}/cooling/cep")
+        return self.handle_api_response(response, status_code, "CEP data retrieved")
 
     def get_simulation_scheduler_jobs(self, simulation_id):
         """Retrieves job scheduler data for a simulation."""
-        return self.make_request(f"/simulation/{simulation_id}/scheduler/jobs")
+        response, status_code = self.make_request(f"/simulation/{simulation_id}/scheduler/jobs")
+        return self.handle_api_response(response, status_code, "Scheduler jobs retrieved")
 
     def get_simulation_scheduler_job_power_history(self, simulation_id, job_id):
         """Fetches power history for a specific job within a simulation."""
-        return self.make_request(f"/simulation/{simulation_id}/scheduler/jobs/{job_id}/power-history")
+        response, status_code = self.make_request(f"/simulation/{simulation_id}/scheduler/jobs/{job_id}/power-history")
+        return self.handle_api_response(response, status_code, "Job power history retrieved")
 
     def get_simulation_scheduler_system(self, simulation_id):
         """Retrieves system scheduler data for a simulation."""
-        return self.make_request(f"/simulation/{simulation_id}/scheduler/system")
+        response, status_code = self.make_request(f"/simulation/{simulation_id}/scheduler/system")
+        return self.handle_api_response(response, status_code, "System scheduler data retrieved")
 
     def get_system_info(self, system_name):
         """Fetches system information."""
-        return self.make_request(f"/system-info/{system_name}")
+        response, status_code = self.make_request(f"/system-info/{system_name}")
+        return self.handle_api_response(response, status_code, "System info retrieved")

@@ -8,17 +8,19 @@
 # without an express license agreement from NVIDIA CORPORATION or
 # its affiliates is strictly prohibited.
 
+import random
+
 import omni.ext
-import omni.ui as ui
-from .window import DataLoaderWindow
-from .name_mapper import NameMapper
-from .data_propagator import DataPropagator
-from .simulation_server_client import SimulationServerClient
-from .simulation import Simulation
-from .marconi100 import Marconi100DataLoader
 import omni.usd
-import os
-import json
+
+from .data_propagator import DataPropagator
+from .logging_config import logger
+from .marconi100 import Marconi100DataLoader
+from .name_mapper import NameMapper
+from .simulation import Simulation
+from .simulation_server_client import SimulationServerClient
+from .window import DataLoaderWindow
+
 
 class DataLoaderExtension(omni.ext.IExt):
     def on_startup(self, ext_id):
@@ -40,41 +42,47 @@ class DataLoaderExtension(omni.ext.IExt):
         # Create UI Window
         self._window = DataLoaderWindow("ExaDigiT", self, width=400, height=400)
 
-    def refresh_scene(self):
+    def generate_lookup(self):
         """Refresh the scene and rebuild xname mapping."""
         print("[exadigit.data_loader] Refreshing scene...")
-        self.name_mapper.refresh_scene()
+        self.name_mapper.generate_lookup()
 
     def propagate_data(self):
-        """Fetches and maps cooling data dynamically based on selected simulation's system."""
-        if not self.selected_sim:
-            print("[exadigit.data_loader] No simulation selected! Cannot propagate data.")
-            return
+        """Fetches CDU and CEP data and propagates only if valid."""
+        logger.info("Fetching CDU and CEP data...")
 
-        # Load the correct data loader based on system
-        if self.selected_sim.system == "marconi100":
-            self.system_loader = Marconi100DataLoader(self.name_mapper)
-        else:
-            print(f"[exadigit.data_loader] No data loader implemented for {self.selected_sim.system}")
-            return
-
-        print(f"[exadigit.data_loader] Fetching cooling CDU data for {self.selected_sim.id} ({self.selected_sim.system})...")
-        cdu_response = self.sim_client.get_simulation_cooling_cdu(self.selected_sim.id)
-        cdu_data = self.system_loader.parse_cdu_response(cdu_response) if cdu_response else {}
-
-        cep_data = {}
-        if self.selected_sim.cooling_enabled:
-            print(f"[exadigit.data_loader] Cooling enabled. Fetching cooling CEP data for {self.selected_sim.id}...")
+        if self.selected_sim:
+            cdu_response = self.sim_client.get_simulation_cooling_cdu(self.selected_sim.id)
             cep_response = self.sim_client.get_simulation_cooling_cep(self.selected_sim.id)
-            cep_data = self.system_loader.parse_cep_response(cep_response) if cep_response else {}
 
-        final_data = {**cdu_data, **cep_data}
+            # Validate CDU data
+            if not cdu_response or "data" not in cdu_response or not cdu_response["data"]:
+                logger.warning("CDU data is missing or empty. Cannot propagate.")
+                # return  # Stop propagation
 
-        if final_data:
-            print(f"[exadigit.data_loader] Final structured data for propagation: {final_data}")
-            self.data_propagator.propagate_data(final_data)
+            # Validate CEP data
+            if not cep_response or "data" not in cep_response or not cep_response["data"]:
+                logger.warning("CEP data is missing or empty. Cannot propagate.")
+                # return  # Stop propagation
+
+            # Future Work: Parse responses with dataloader based on selected_sim.system, return correctly mapped data
+            # Map the retrieved CDU and CEP data to xnames
+            # mapped_data = self.map_cooling_data(cdu_response, cep_response)
+
+            # Send the mapped data to the data propagator
+            # self.data_propagator.propagate_data(mapped_data)
+
+            # Just use test data for now with generate_test_data
+            logger.info("Generating test data for propagation...")
+            test_data = self.generate_test_data()
+
+            # Send the mapped data to the data propagator
+            logger.info("Propagating mapped test data...")
+            self.data_propagator.propagate_data(test_data)
+
+            logger.info("Data successfully propagated.")
         else:
-            print("[exadigit.data_loader] No valid cooling data available to propagate.")
+            logger.error("No simulation selected! Please select one from the Simulation List panel.")
 
     ### WRAPPERS FOR SIMULATION SERVER CALLS ###
     def run_simulation(self, simulation_params):
@@ -97,24 +105,16 @@ class DataLoaderExtension(omni.ext.IExt):
 
     def get_simulation_list(self):
         """Fetches a list of available simulations and stores them as objects."""
-        print("[exadigit.data_loader] Running get simulation list API call...")
+        logger.info("[exadigit.data_loader] Running get simulation list API call...")
 
-        response = self.sim_client.get_simulation_list(fields=["default"], limit=10)
+        response, status_code = self.sim_client.get_simulation_list(fields=["default"], limit=10)
 
-        print(f"[DEBUG] SIM LIST RESPONSE: {response}")  # Print full response for debugging
-
-        if response and "results" in response:
+        if status_code == 200 and response and "results" in response:
             self.sim_list = []  # Clear existing list before populating
 
             for item in response["results"]:
-                print(f"[DEBUG] Simulation Item: {item}")  # Print each item in the response
-
-                # Extract the `config` field
                 config = item.get("config", {})
-                print(f"[DEBUG] Extracted config: {config}")
-
-                cooling_config = config.get("cooling", {})
-                cooling_enabled = cooling_config.get("enabled", False)
+                cooling_enabled = config.get("cooling", {}).get("enabled", False)
 
                 sim = Simulation(
                     sim_id=item.get("id"),
@@ -124,9 +124,7 @@ class DataLoaderExtension(omni.ext.IExt):
                 )
                 self.sim_list.append(sim)
 
-            print(f"[DEBUG] Stored {len(self.sim_list)} simulations: {self.sim_list}")
-        else:
-            print("[exadigit.data_loader] Failed to fetch simulation list or empty response.")
+            logger.info(f"✅ Stored {len(self.sim_list)} simulations.")
 
     def get_simulation_details(self, simulation_id):
         """Fetch details of a specific simulation."""
@@ -153,49 +151,44 @@ class DataLoaderExtension(omni.ext.IExt):
         print(f"System Info: {response}")
 
     def generate_test_data(self):
-        """Generates structured test data."""
+        """Generates structured randomized test data."""
         test_data = {}
+
         for cab in range(1, 3):  # Example: Two cabinets (x1, x2)
-            test_data[f"x{cab}"] = {"power": -1.0, "temperature": 75.0, "status": "active"}
-            for node in range(1, 5):  # 4 nodes per cabinet
+            test_data[f"x{cab}"] = {
+                "power": round(random.uniform(1, 5), 2),
+                "temperature": round(random.uniform(0, 100), 2),
+                "status": random.choice(["active", "inactive"])
+            }
+
+            for node in range(1, 22):  # 21 nodes per cabinet
                 node_key = f"x{cab}n{node}"
-                test_data[node_key] = {"power": -1.0, "temperature": 75.0, "status": "active"}
-                test_data[f"{node_key}p1"] = {"power": -1.0, "temperature": 75.0, "status": "active"}
+                test_data[node_key] = {
+                    "power": round(random.uniform(-5, 5), 2),
+                    "temperature": round(random.uniform(0, 100), 2),
+                    "status": random.choice(["active", "inactive"])
+                }
+                test_data[f"{node_key}p1"] = {
+                    "power": round(random.uniform(-5, 5), 2),
+                    "temperature": round(random.uniform(0, 100), 2),
+                    "status": random.choice(["active", "inactive"])
+                }
 
                 for acc in range(1, 5):  # 4 accelerators per node
-                    test_data[f"{node_key}a{acc}"] = {"power": -1.0, "temperature": 75.0, "status": "active"}
+                    test_data[f"{node_key}a{acc}"] = {
+                        "power": round(random.uniform(-5, 5), 2),
+                        "temperature": round(random.uniform(0, 100), 2),
+                        "status": random.choice(["active", "inactive"])
+                    }
 
                 for drive in range(1, 9):  # 8 drives per node
-                    test_data[f"{node_key}d{drive}"] = {"power": -1.0, "temperature": 75.0, "status": "active"}
+                    test_data[f"{node_key}d{drive}"] = {
+                        "power": round(random.uniform(-5, 5), 2),
+                        "temperature": round(random.uniform(0, 100), 2),
+                        "status": random.choice(["active", "inactive"])
+                    }
+
         return test_data
-
-    def create_test_simulation(self):
-        """Creates a test simulation with required parameters."""
-        print("[exadigit.data_loader] Running test simulation creation...")
-
-        simulation_params = {
-            "start": "2025-03-10T12:00:00Z",  # ISO 8601 format
-            "end": "2025-03-10T14:00:00Z",
-            "system": "fugaku",  # One of the allowed values
-
-            "scheduler": {
-                "enabled": True,
-                "jobs_mode": "random",  # Change to "custom" if providing a job list
-                "seed": 12345,  # Optional but good for consistency
-                "num_jobs": 10  # Required when jobs_mode is "random"
-            },
-
-            "cooling": {
-                "enabled": False  # Default is false, but explicitly setting it
-            }
-        }
-
-        response = self.sim_client.post_simulation_run(simulation_params)
-
-        if response:
-            print(f"Test Simulation Created: {response}")
-        else:
-            print("[exadigit.data_loader] Failed to create test simulation")
 
     def on_shutdown(self):
         print("[exadigit.data_loader] Extension shutdown")

@@ -1,8 +1,10 @@
 import json
 import os
-from pxr import Usd, Sdf
+
 import omni.ext
 import omni.usd
+from pxr import Sdf
+
 
 class NameMapper:
     def __init__(self):
@@ -41,7 +43,7 @@ class NameMapper:
                         xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
                     xname_attr.Set(prefix)
                     # Print statement to verify correct xname assignment
-                    #print(f"[exadigit.data_loader] Assigned xname '{prefix}' to container {prim.GetPath()}")
+                    print(f"[exadigit.data_loader] Assigned xname '{prefix}' to container {prim.GetPath()}")
 
                     self.lookup_dict[prefix] = prim
 
@@ -66,7 +68,7 @@ class NameMapper:
                         xname_attr = attributes_scope.CreateAttribute("xname", Sdf.ValueTypeNames.String)
                     xname_attr.Set(leaf_xname)
                     # Print statement to verify correct xname assignment
-                    # print(f"[exadigit.data_loader] Assigned xname '{leaf_xname}' to leaf {prim.GetPath()}")
+                    print(f"[exadigit.data_loader] Assigned xname '{leaf_xname}' to leaf {prim.GetPath()}")
 
                     self.lookup_dict[leaf_xname] = prim
 
@@ -74,8 +76,7 @@ class NameMapper:
             if child.GetName() != "Phys_Rep":
                 self._assign_xnames_recursive(child, stack, counters)
 
-
-    def refresh_scene(self):
+    def generate_lookup(self):
             print("[exadigit.data_loader] Rebuilding xname assignments and lookup dictionary...")
             self.lookup_dict.clear()
             stage = omni.usd.get_context().get_stage()
