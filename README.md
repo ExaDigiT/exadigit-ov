@@ -13,7 +13,7 @@ repo launch -d
 ```
 
 ## Simulation Server Setup
-1. Follow instructions to install ExaDigiT Simulation Server here: https://code.ornl.gov/exadigit/simulationserver
+1. Follow instructions to install ExaDigiT Simulation Server here (make sure to clone with submodules): https://code.ornl.gov/exadigit/simulationserver
 2. Run the server locally, it will be hosted on http:localhost:8080
 
 
