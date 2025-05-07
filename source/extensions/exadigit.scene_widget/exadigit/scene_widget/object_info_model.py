@@ -131,7 +131,7 @@ class ObjInfoModel(sc.AbstractManipulatorModel):
 
         # Find the top center of the bounding box and add a small offset upward.
         x_Pos = (bboxMin[0] + bboxMax[0]) * 0.5
-        y_Pos = bboxMax[1] + 30
+        y_Pos = bboxMax[1] + 5
         z_Pos = (bboxMin[2] + bboxMax[2]) * 0.5
         position = [x_Pos, y_Pos, z_Pos]
         return position
