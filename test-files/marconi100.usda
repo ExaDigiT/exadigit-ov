@@ -1,0 +1,678 @@
+#usda 1.0
+(
+    customLayerData = {
+        dictionary cameraSettings = {
+            dictionary Front = {
+                double3 position = (0, 0, 50000)
+                double radius = 500
+            }
+            dictionary Perspective = {
+                double3 position = (-838.8778925551691, 902.6724423548495, 1836.8388901801827)
+                double3 target = (-218.2097559897171, 354.19797746976235, 541.3283248681712)
+            }
+            dictionary Right = {
+                double3 position = (-50000, 0, 0)
+                double radius = 500
+            }
+            dictionary Top = {
+                double3 position = (0, 50000, 0)
+                double radius = 500
+            }
+            string boundCamera = "/OmniverseKit_Persp"
+        }
+        dictionary metricsAssembler = {
+            dictionary "/World/CABINET_IBM_42U_01" = {
+            }
+            dictionary "/World/CABINET_IBM_42U_02" = {
+            }
+            dictionary "/World/CABINET_IBM_42U_03" = {
+            }
+            dictionary "/World/CABINET_IBM_42U_04" = {
+            }
+            dictionary "/World/CABINET_IBM_42U_05" = {
+            }
+            dictionary "/World/CABINET_IBM_42U_06" = {
+            }
+            dictionary "/World/CABINET_IBM_42U_07" = {
+            }
+            dictionary "/World/CABINET_IBM_42U_08" = {
+            }
+            int version = 1
+        }
+        dictionary omni_layer = {
+            dictionary locked = {
+            }
+            dictionary muteness = {
+            }
+        }
+        dictionary renderSettings = {
+        }
+        dictionary xrSettings = {
+            token "xrstage:customAnchor" = ""
+            token "xrstage:profile:ar:customAnchor" = ""
+        }
+    }
+    defaultPrim = "World"
+    endTimeCode = 100
+    metersPerUnit = 0.01
+    startTimeCode = 0
+    timeCodesPerSecond = 60
+    upAxis = "Y"
+)
+
+def Xform "World"
+{
+    def Mesh "Plane"
+    {
+        float3[] extent = [(-50, 0, -50), (50, 0, 50)]
+        int[] faceVertexCounts = [4]
+        int[] faceVertexIndices = [0, 2, 3, 1]
+        normal3f[] normals = [(0, 1, 0), (0, 1, 0), (0, 1, 0), (0, 1, 0)] (
+            interpolation = "faceVarying"
+        )
+        point3f[] points = [(-50, 0, -50), (50, 0, -50), (-50, 0, 50), (50, 0, 50)]
+        texCoord2f[] primvars:st = [(0, 1), (0, 0), (1, 0), (1, 1)] (
+            interpolation = "faceVarying"
+        )
+        uniform token subdivisionScheme = "none"
+        double3 xformOp:rotateXYZ = (0, 0, 0)
+        double3 xformOp:scale = (50, 50, 50)
+        double3 xformOp:translate = (0, 0, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+    }
+
+    def "CABINET_IBM_42U_01" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-326.9844970703125, -0.0003009143110830337, 373.56683349609375)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_02" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-265.7407910979588, -0.0003009143110830337, 373.566833496096)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_03" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-204.38225718980388, -0.0003009143110830337, 373.56683349609517)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_04" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-143.13855121745007, -0.0003009143110830337, 373.56683349609744)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_05" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-81.70886011215121, -0.0003009143110830337, 373.56683349609597)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_06" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-20.46515413979747, -0.0003009143110830337, 373.56683349609824)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_07" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (40.893379768357384, -0.0003009143110830337, 373.5668334960974)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_08" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (102.1370857407112, -0.0003009143110830337, 373.56683349609966)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_09" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (164.5794299780427, -0.0003009143110830337, 373.5668334960955)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_10" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (225.82313595039642, -0.0003009143110830337, 373.5668334960978)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_11" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (287.1816698585513, -0.0003009143110830337, 373.56683349609693)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_12" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (348.4253758309051, -0.0003009143110830337, 373.5668334960992)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_13" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (409.85506693620397, -0.0003009143110830337, 373.56683349609773)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_14" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (471.0987729085577, -0.0003009143110830337, 373.5668334961)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_15" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (532.4573068167126, -0.0003009143110830337, 373.56683349609915)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_16" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (593.7010127890665, -0.0003009143110830337, 373.5668334961014)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_17" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (655.0921868837942, -0.0003009143110830337, 373.5668334961028)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_18" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-326.98449707031057, -0.0003009143110830337, -1.540276168508612)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_19" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-265.74079109795684, -0.0003009143110830337, -1.5402761685063382)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_20" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-204.38225718980198, -0.0003009143110830337, -1.5402761685071908)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_21" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-143.13855121744814, -0.0003009143110830337, -1.540276168504917)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_22" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-81.7088601121493, -0.0003009143110830337, -1.540276168506395)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_23" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-20.465154139795573, -0.0003009143110830337, -1.5402761685041213)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_24" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (40.893379768359296, -0.0003009143110830337, -1.540276168504974)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_25" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (102.13708574071313, -0.0003009143110830337, -1.5402761685027002)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_26" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (164.57942997804463, -0.0003009143110830337, -1.5402761685068498)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_27" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (225.82313595039835, -0.0003009143110830337, -1.540276168504576)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_28" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (287.1816698585532, -0.0003009143110830337, -1.5402761685054287)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_29" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (348.42537583090706, -0.0003009143110830337, -1.540276168503155)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_30" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (409.8550669362059, -0.0003009143110830337, -1.540276168504633)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_31" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (471.0987729085596, -0.0003009143110830337, -1.5402761685023592)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_32" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (532.4573068167145, -0.0003009143110830337, -1.5402761685032118)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_33" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (593.7010127890684, -0.0003009143110830337, -1.540276168500938)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_34" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (655.0921868837961, -0.0003009143110830337, -1.5402761684995738)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_35" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-396.04693210443475, -0.0003009143110830337, -440.68647503467184)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_36" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-334.80322613208114, -0.0003009143110830337, -440.68647503466957)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_37" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-273.44469222392627, -0.0003009143110830337, -440.6864750346705)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_38" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-212.20098625157243, -0.0003009143110830337, -440.6864750346682)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_39" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-150.7712951462736, -0.0003009143110830337, -440.6864750346697)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_40" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-89.52758917391986, -0.0003009143110830337, -440.6864750346674)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_41" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (-28.169055265764996, -0.0003009143110830337, -440.6864750346682)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_42" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (33.07465070658884, -0.0003009143110830337, -440.68647503466593)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_43" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (95.51699494392028, -0.0003009143110830337, -440.68647503467014)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_44" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (156.76070091627406, -0.0003009143110830337, -440.68647503466786)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_45" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (218.11923482442893, -0.0003009143110830337, -440.68647503466866)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_46" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (279.36294079678277, -0.0003009143110830337, -440.6864750346664)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_47" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (340.7926319020816, -0.0003009143110830337, -440.68647503466786)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_48" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (402.03633787443533, -0.0003009143110830337, -440.6864750346656)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_49" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (463.39487178259026, -0.0003009143110830337, -440.6864750346665)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_50" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (524.6385777549441, -0.0003009143110830337, -440.6864750346642)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_51" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (586.0297518496718, -0.0003009143110830337, -440.68647503466286)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+
+    def "CABINET_IBM_42U_52" (
+        prepend payload = @./CABINET_IBM_42U_01.usd@
+    )
+    {
+        double xformOp:rotateX:unitsResolve = -90
+        float3 xformOp:rotateXYZ = (0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        double3 xformOp:translate = (648.199242031823, -0.0003009143110830337, -440.6864750346632)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale", "xformOp:rotateX:unitsResolve"]
+    }
+}
+
+over "OmniKit_Viewport_LightRig"
+{
+    over "Lights"
+    {
+        over "DomeLight"
+        {
+            double3 xformOp:rotateXYZ = (0, 0, 62.30000092834234)
+            double3 xformOp:scale = (1, 1, 1)
+            double3 xformOp:translate = (1.0540447332284441e-13, -1.05404473322845e-13, 779.6995467799466)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+        }
+
+        over "DistantLight"
+        {
+            double3 xformOp:rotateXYZ = (55, 0, 135)
+            double3 xformOp:scale = (1, 1, 1)
+            double3 xformOp:translate = (5.459828429335476e-13, -3.2088532698317045e-14, 791.2717456906278)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:rotateXYZ", "xformOp:scale"]
+        }
+    }
+}
+
