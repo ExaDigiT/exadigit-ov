@@ -48,41 +48,43 @@ class DataLoaderExtension(omni.ext.IExt):
         self.name_mapper.generate_lookup()
 
     def propagate_data(self):
-        """Fetches CDU and CEP data and propagates only if valid."""
+        """Fetches CDU and CEP data and propagates only if valid. Currently you can comment/uncomment
+        code blocks to either use test data or swap in with data retrieved from the simulation server"""
         logger.info("Fetching CDU and CEP data...")
 
-        if self.selected_sim:
-            cdu_response = self.sim_client.get_simulation_cooling_cdu(self.selected_sim.id)
-            cep_response = self.sim_client.get_simulation_cooling_cep(self.selected_sim.id)
+        ### USE BELOW LINES IF YOU WANT TO USE TEST DATA ###
+        logger.info("Generating test data for propagation...")
+        test_data = self.generate_test_data()
+        self.data_propagator.propagate_data(test_data)
+        ### END TEST DATA LINES OF CODE ###
 
-            # Validate CDU data
-            if not cdu_response or "data" not in cdu_response or not cdu_response["data"]:
-                logger.warning("CDU data is missing or empty. Cannot propagate.")
-                # return  # Stop propagation
+        ### OTHERWISE USE BELOW LINES TO USE SIMULATION SERVER DATA ###
+        # if self.selected_sim:
+        #     cdu_response = self.sim_client.get_simulation_cooling_cdu(self.selected_sim.id)[0]
+        #     cep_response = self.sim_client.get_simulation_cooling_cep(self.selected_sim.id)[0]
 
-            # Validate CEP data
-            if not cep_response or "data" not in cep_response or not cep_response["data"]:
-                logger.warning("CEP data is missing or empty. Cannot propagate.")
-                # return  # Stop propagation
+        #     Validate CDU data
+        #     if not cdu_response or "data" not in cdu_response or not cdu_response["data"]:
+        #         logger.warning("CDU data is missing or empty. Cannot propagate.")
+        #         return  # Stop propagation
 
-            # Future Work: Parse responses with dataloader based on selected_sim.system, return correctly mapped data
-            # Map the retrieved CDU and CEP data to xnames
-            # mapped_data = self.map_cooling_data(cdu_response, cep_response)
+        #     Validate CEP data
+        #     if not cep_response or "data" not in cep_response or not cep_response["data"]:
+        #         logger.warning("CEP data is missing or empty. Cannot propagate.")
+        #         return  # Stop propagation
 
-            # Send the mapped data to the data propagator
-            # self.data_propagator.propagate_data(mapped_data)
+        #     Future Work: Parse responses with dataloader based on selected_sim.system, return correctly mapped data
+        #     Map the retrieved CDU and CEP data to xnames
 
-            # Just use test data for now with generate_test_data
-            logger.info("Generating test data for propagation...")
-            test_data = self.generate_test_data()
+        #     mapped_data = self.map_cooling_data(cdu_response, cep_response)
+        #     logger.info("Propagating mapped test data...")
+        #     self.data_propagator.propagate_data(mapped_data)
 
-            # Send the mapped data to the data propagator
-            logger.info("Propagating mapped test data...")
-            self.data_propagator.propagate_data(test_data)
 
-            logger.info("Data successfully propagated.")
-        else:
-            logger.error("No simulation selected! Please select one from the Simulation List panel.")
+        #     logger.info("Data successfully propagated.")
+        # else:
+        #     logger.error("No simulation selected! Please select one from the Simulation List panel.")
+        ### END SIMULATION SERVER LINES OF CODE ###
 
     ### WRAPPERS FOR SIMULATION SERVER CALLS ###
     def run_simulation(self, simulation_params):
@@ -150,6 +152,17 @@ class DataLoaderExtension(omni.ext.IExt):
         response = self.sim_client.get_system_info(system_name)
         print(f"System Info: {response}")
 
+
+    # Helper methods for data generation/propagation
+    def map_cooling_data(self, cdu_response, cep_response):
+        # Send responses to the appropriate dataloader based on the system of the selected sim
+        if self.selected_sim.system == "marconi100":
+            self.system_loader = Marconi100DataLoader(self.name_mapper)
+
+        self.system_loader.parse_cdu_response(cdu_response)
+        # self.system_loader.parse_cep_response()
+
+
     def generate_test_data(self):
         """Generates structured randomized test data."""
         test_data = {}
@@ -176,9 +189,9 @@ class DataLoaderExtension(omni.ext.IExt):
 
                 for acc in range(1, 5):  # 4 accelerators per node
                     test_data[f"{node_key}a{acc}"] = {
-                        "power": round(random.uniform(-5, 5), 2),
-                        "temperature": round(random.uniform(0, 100), 2),
-                        "status": random.choice(["active", "inactive"])
+                        "power": str(round(random.uniform(48, 300), 2)) + "W",
+                        "temperature": str(round(random.uniform(60, 85), 2)) + "C",
+                        # "status": random.choice(["active"])
                     }
 
                 for drive in range(1, 9):  # 8 drives per node

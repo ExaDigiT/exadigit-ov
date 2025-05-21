@@ -22,13 +22,13 @@ class WidgetInfoManipulator(sc.Manipulator):
                 ui.Rectangle(style={
                     "background_color": cl(0.2),
                     "border_color": cl(0.7),
-                    "border_width": 4,
-                    "border_radius": 4,
+                    "border_width": 8,
+                    "border_radius": 8,
                 })
 
             # VStack inside the rectangle, allowing dynamic height adjustment
             with ui.VStack(spacing=5, alignment=ui.Alignment.CENTER):
-                self._name_label = ui.Label("", height=20, alignment=ui.Alignment.CENTER, style={"font_size": 20})
+                self._name_label = ui.Label("", height=20, alignment=ui.Alignment.CENTER, style={"font_size": 24})
                 self._attributes_container = ui.Frame()  # Let this auto-size
 
 
