@@ -189,8 +189,8 @@ class DataLoaderExtension(omni.ext.IExt):
 
                 for acc in range(1, 5):  # 4 accelerators per node
                     test_data[f"{node_key}a{acc}"] = {
-                        "power": round(random.uniform(0.25, 0.7), 2),
-                        "temperature": round(random.uniform(50, 75), 2),
+                        "power": str(round(random.uniform(48, 300), 2)) + "W",
+                        "temperature": str(round(random.uniform(60, 85), 2)) + "C",
                         # "status": random.choice(["active"])
                     }
 
