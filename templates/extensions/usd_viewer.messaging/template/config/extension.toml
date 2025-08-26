@@ -10,7 +10,7 @@
 
 [package]
 title = "{{ extension_display_name }}"
-version = "{{ version }}"  # Semantic Versionning is used: https://semver.org/
+version = "{{ version }}"  # Semantic Versioning is used: https://semver.org/
 description = "The simplest python extension example. Use it as a starting point for your extensions."
 category = "Messaging"  # How to categorize this in the Extension Manager
 changelog = "docs/CHANGELOG.md"
@@ -25,7 +25,6 @@ repository = "https://github.com/NVIDIA-Omniverse/kit-app-template"  # URL of th
 "omni.kit.livestream.messaging" = {}
 "omni.usd" = {}
 "omni.kit.viewport.utility" = {}
-
 
 [settings]
 
@@ -42,13 +41,11 @@ pages = [
 
 
 [[test]]
+
 dependencies = [
     "omni.activity.ui",
-    "omni.kit.mainwindow",
     "omni.kit.stage_templates",
-    # "omni.kit.test_suite.helpers",
     "omni.kit.ui_test",
-    "omni.kit.viewport.utility",
     "omni.kit.viewport.window",
 ]
 
