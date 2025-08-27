@@ -18,3 +18,7 @@ repo_build.prebuild_copy {
 
 define_app("exadigit.dc_digital_twin_base.kit")
 define_app("exadigit.dc_digital_twin_base_streaming.kit")
+define_app("exadigit.dc_digital_twin_composer.kit")
+define_app("exadigit.dc_digital_twin_composer_streaming.kit")
+define_app("exadigit.dc_digital_twin_composer_nvcf.kit")
+define_app("exadigit.dc_digital_twin_composer_gdn_streaming.kit")
