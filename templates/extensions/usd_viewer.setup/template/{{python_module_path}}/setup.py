@@ -16,7 +16,6 @@ import carb.tokens
 import omni.ext
 import omni.kit.app
 import omni.kit.imgui as _imgui
-import omni.kit.viewport
 import omni.usd
 from omni.kit.mainwindow import get_main_window
 from omni.kit.quicklayout import QuickLayout
@@ -43,7 +42,9 @@ class SetupExtension(omni.ext.IExt):
         """This is called every time the extension is activated. It is used to
         set up the application and load the stage."""
         self._settings = carb.settings.get_settings()
-
+        if self._settings and self._settings.get("/app/warmupMode"):
+            # if warmup mode is enabled, we don't want to load the stage just return
+            return
         # get auto load stage name
         stage_url = self._settings.get_as_string("/app/auto_load_usd")
 

@@ -58,6 +58,11 @@ class CreateSetupExtension(omni.ext.IExt):
         of the extensions etc
         """
         self._settings = carb.settings.get_settings()
+        if self._settings and self._settings.get("/app/warmupMode"):
+            # if warmup mode is enabled, we don't want to load the stage or
+            # layout, just return
+            return
+
         self._menu_layout = []
 
         telemetry_logger = logging.getLogger("idl.telemetry.opentelemetry")
@@ -101,8 +106,8 @@ class CreateSetupExtension(omni.ext.IExt):
             self._settings.set(
                 "/persistent/app/viewport/Viewport 2/Viewport0/hud/visible",
                 True
-            )
-
+            )      
+            
         # These two settings do not co-operate well on ADA cards, so for
         # now simulate a toggle of the present thread on startup to work around
         if self._settings.get("/exts/omni.kit.renderer.core/present/enabled") \
@@ -168,7 +173,7 @@ class CreateSetupExtension(omni.ext.IExt):
         imgui_style_applied = False
         try:
             # using imgui directly to adjust some color and Variable
-            import carb.imgui as _imgui
+            import omni.kit.imgui as _imgui
             imgui = _imgui.acquire_imgui()
             if imgui.is_valid():
                 imgui.push_style_color(_imgui.StyleColor.ScrollbarGrab, carb.Float4(0.4, 0.4, 0.4, 1))

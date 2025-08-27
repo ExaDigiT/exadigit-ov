@@ -9,12 +9,12 @@
 # its affiliates is strictly prohibited.
 
 import asyncio
+import os
 
 import carb
 import carb.events
 import carb.tokens
-import omni.ext
-import omni.log
+
 import omni.kit.app
 import omni.kit.livestream.messaging as messaging
 import omni.usd
@@ -65,9 +65,17 @@ class LoadingManager:
 
         message_bus = omni.kit.app.get_app().get_message_bus_event_stream()
         for event_type, handler in incoming.items():
+            # Registering event aliases for incoming events that now leverage Events 2.0
+            # TODO: Remove this when all clients have migrated to Events 2.0
+            # This is a temporary solution to ensure compatibility with existing clients
+            if event_type.startswith("omni.kit.window.status_bar@"):
+                omni.kit.app.register_event_alias(
+                    carb.events.type_from_string(event_type),
+                    event_type
+                )
             self._subscriptions.append(
-                message_bus.create_subscription_to_pop(
-                    handler, name=event_type
+                message_bus.create_subscription_to_pop_by_type(
+                    carb.events.type_from_string(event_type), handler
                 )
             )
 
@@ -120,13 +128,21 @@ class LoadingManager:
             )
 
             def process_url(url):
-                # Using a single leading `.` to signify that the path is
-                # relative to the ${app} token's parent directory.
+                # Using a single leading `.` to signify that the path is relative to the ${app} token's parent directory
+                # Because we've moved the samples out of the app directory, we need to check for that here
+                # in the samples extension directory.
+                # If that doesn't exist (using older version of the extension), we fall back to old behavior.
                 if url.startswith(("./", ".\\")):
+                    if url.startswith(("./samples", ".\\samples")):
+                        sample_url = carb.tokens.acquire_tokens_interface().resolve(
+                            "${omni.usd_viewer.samples}/" + url[1:].replace("samples", "samples_data")
+                        )
+                        if os.path.exists(sample_url):
+                            return sample_url
                     return carb.tokens.acquire_tokens_interface().resolve(
                         "${app}/.." + url[1:]
                     )
-                return url
+                return carb.tokens.acquire_tokens_interface().resolve(url)
 
             # Check to see if we've already loaded the current stage.
             url = process_url(self._requested_stage_url)
@@ -153,19 +169,15 @@ class LoadingManager:
                 else:
                     result, error = await usd_context.new_stage_async()
 
-                message_bus = omni.kit.app.get_app().get_message_bus_event_stream()
-                event_type = carb.events.type_from_string("openedStageResult")
-
                 if result is not True:
+                    message_bus = omni.kit.app.get_app().get_message_bus_event_stream()
+                    event_type = carb.events.type_from_string("openedStageResult")
                     # Send message to client that loading failed.
                     carb.log_warn(f'The file that the client requested failed to load: {url} (error: {error})')
                     payload = {"url": url, "result": "error", "error": error}
                     message_bus.dispatch(event_type, payload=payload)
                     self._reset_state()
                     return
-
-                payload = {"url": url, "result": "success", "error": ''}
-                message_bus.dispatch(event_type, payload=payload)
 
             asyncio.ensure_future(open_stage())
 
