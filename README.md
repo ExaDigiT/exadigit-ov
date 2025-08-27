@@ -1,5 +1,8 @@
 # ExaDigiT for NVIDIA Omniverse
 This repo is made from the kit-app-template, more info found here: https://github.com/NVIDIA-Omniverse/kit-app-template
+
+NOTE: The "update*" branch is a quick attempt to update  to the latest version of the template. Files were regeenerated/copied quickly as lots of things change. So hopefully this worked. If something is missing, it may be useful to look at the main repo for flag differences.
+
 ## Installation
 Clone this repo
 ```bash
