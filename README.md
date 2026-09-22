@@ -5,8 +5,6 @@ This repo is made from the kit-app-template, more info found here: https://githu
 
 [![ExaDigiT on NVIDIA Omniverse](https://img.youtube.com/vi/xa2wVSVy7cA/0.jpg)](https://www.youtube.com/watch?v=xa2wVSVy7cA)
 
-NOTE: The "update*" branch is a quick attempt to update  to the latest version of the template. Files were regeenerated/copied quickly as lots of things change. So hopefully this worked. If something is missing, it may be useful to look at the main repo for flag differences.
-
 ## Installation
 Clone this repo
 ```bash
