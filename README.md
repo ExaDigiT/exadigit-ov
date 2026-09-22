@@ -8,12 +8,15 @@ Clone this repo
 ```bash
 git clone https://code.ornl.gov/exadigit/exadigit-ov.git
 ```
-Build then launch exadigit.dc_digital_twin_base.kit in developer mode
+Build, then launch the composer app (add `-d` to enable the developer debugging extensions)
 ```bash
 cd exadigit-ov
-repo build
-repo launch -d
+./repo.sh build
+./repo.sh launch -n exadigit.dc_digital_twin_composer.kit
 ```
+On some Linux systems an "IOMMU Enabled" warning dialog appears at startup (it may be hidden behind other windows); the app waits until you click OK.
+
+To show the data center, go to **File > Open** and open `test-files/test.usd`.
 
 ## Simulation Server Setup
 1. Follow instructions to install ExaDigiT Simulation Server here (make sure to clone with submodules): https://code.ornl.gov/exadigit/simulationserver
